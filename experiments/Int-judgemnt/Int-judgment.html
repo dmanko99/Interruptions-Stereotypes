@@ -1,0 +1,703 @@
+<html>
+
+<head>
+	<title> Judge the Conversation </title>
+
+	<!-- JS -->
+		<!-- external general utilities -->
+			<!-- <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script> -->
+			<script src="shared/js/jquery-1.11.1.min.js "></script>
+			<script src="shared/full-projects/jquery-ui/jquery-ui.min.js"></script>
+			<script src="shared/js/underscore-min.js"></script>
+
+		<!-- Proliferate -->
+			<script src="https://proliferate.alps.science/static/js/proliferate.js"></script>
+
+		<!-- CoCoLab scripts -->
+			<!-- Experiment logic -->
+				<script src="shared/js/exp-V2.js"></script>
+				<script src="shared/js/stream-V2.js"></script>
+			<!-- General utilities -->
+				<script src="shared/js/mmturkey.js "></script>
+				<script src="shared/js/browserCheck.js"></script>
+				<script src="shared/js/utils.js"></script>
+
+		<!-- Experiment-specific helper functions -->
+			<!-- <script src="js/local-utils.js"></script> -->
+
+	<!-- CSS -->
+		<link href="shared/full-projects/jquery-ui/jquery-ui.min.css" rel="stylesheet" type="text/css"/>
+		<link href="shared/css/cocolab-style_css.css" rel="stylesheet" type="text/css"/>
+		<link href="css/local-style.css" rel="stylesheet" type="text/css"/>
+
+	<!-- Experiment files -->
+		<script src = "stims/int_stims.js"></script>
+		<script src="js/interruptions.js"></script>
+</head>
+
+<!-- starting actual experiment -->
+<body onload = "init();">
+	<noscript>This task requires Javascript.</noscript>
+
+	<!-- Bot check slide -->
+		<div class = "slide" id = "bot">
+			<h3>Are you a bot?</h3>
+			<p id = "story_text"></p>
+			<p id="question_text"></p>
+			<input type = "text" id = "text_box"/></question>
+			<br><br>
+			<div class = "err1">
+				<p2 style="color:red">Failing this question two more times will disqualify you from this study.</p2>
+			</div>
+			<div class = "err2">
+				<p2 style = "color:red">Failing this question one more time will disqualify you from this study.</p2>
+			</div>
+			<div class = "dq">
+				<p2 style = "color:red">You failed the question and you are disqualified from completing this study.</p2>
+			</div>
+			<br>
+			<div class = "button">
+				<button id = "contbutton" onclick = "_s.button()">Continue</button>
+			</div>
+			<script>
+				$("#text_box").keypress(function(event) {
+					if (event.keyCode == 13) {
+						$("#contbutton").click();
+					}
+				});
+			</script>
+		</div>
+
+	<!-- Study information/intro slide -->
+		<div class = "slide" id = "info" >
+			<img src = "shared/images/alps_lab.png" alt = "Alps Lab" id = "alpslogo" style = "width:300"></img>
+			
+			<p id = "alpsLab">Stanford ALPS Lab</p>
+
+			<p id = "instruct-text">
+				<b>DESCRIPTION: </b>
+				We invite you to participate in a research study on perceptions and social interaction. You will be asked to listen to a 20-30 second audio recording of two speakers interacting and then answer questions about the speakers you heard talking. Afterwards, you'll answer a series of questions about yourself. You will not be asked any identifying personal information and all responses are anonymous.
+				<br>
+				<b>TIME INVOLVEMENT: </b>
+				Your participation will take approximately 6 minutes.
+			</p>
+
+			<button id="start_button" type="button">Start Experiment</button>
+
+			<br><br><br>
+			<p id = "instruct-text" align = "left"><i><small><small>
+				<b>LEGAL INFORMATION</b>:
+					<br>We invite you to participate in a research study on perceptions and social interaction. You will be listening to a short audio recording.
+					<br>You will be paid for your participation at the posted rate. There are no risks or benefits of any kind involved in this study.
+					<br>If you have read this form and have decided to participate in this experiment, please understand your participation is voluntary and you have the right to withdraw your consent or discontinue participation at any time without penalty or loss of benefits to which you are otherwise entitled. The alternative is not to participate.  You have the right to refuse to answer particular questions.  The results of this research study may be presented at scientific or professional meetings or published in scientific journals.  Your individual privacy will be maintained in all published and written data resulting from the study.
+				<br><br><b>CONTACT INFORMATION</b>:
+					<br>If you have any questions, concerns or complaints about this research, its procedures, risks and benefits, contact the Protocol Director, Meghan Sumner, at (650)-725-9336.
+					<br>If you are not satisfied with how this study is being conducted, or if you have any concerns, complaints, or general questions about the research or your rights as a participant, please contact the Stanford Institutional Review Board (IRB) to speak to someone independent of the research team at (650)-723-2480 or toll free at 1-866-680-2906, or email at IRB2-Manager@lists.stanford.edu.  You can also write to the Stanford IRB, Stanford University, 1705 El Camino Real, Palo Alto, CA 94306 USA.
+					<br>If you agree to participate, please proceed to the study tasks.<br>
+			</small></small></i></p>
+		</div>
+
+	<!-- Native English speaker check -->
+		<div class = "slide" id = "eng_check">
+			<h3>Native English Speaker Check</h3>
+			<br>
+			<p>You must be a <b>native speaker of English</b> and be able to <b>listen to a short audio clip</b> in order to participate in this survey. Please click on the button below or press the <b><i>Y</i></b> key to indicate that you meet the following requirements:
+			</p>
+			<p><ul align = "left">
+				<li>
+					I declare that I have been speaking English in the U.S. since age 5 or younger.
+				</li>
+				<li>
+					I declare that I will listen to a short audio clip.
+				</li>
+			</ul></p>
+			<br><br>
+			<div class = "button">
+				<button id = "contbutton" onclick = "_s.button()">I meet the above requirements</button>
+			</div>
+			<script>
+				$(document).bind("keydown", function(event) {
+					if (event.keyCode == 89) {
+						$("#contbutton").click();
+					}
+				});
+			</script>
+		</div>
+
+	<!-- Audio file and Questions -->
+		<div class = "slide" id = "trial_1">
+			<div id = "page1">
+				<p id = "header">
+					We're interested in finding out how much you can guess about two people from listening to them talk. You'll listen to one sound clip from a converstaion between two people and then answer a series of questions about these people you heard.
+				</p>
+				<br>
+				<p id = "speaker-intros"></p>
+				<div class = "table" align = "center">
+					<div class = "row" align = "center">
+						<div class = "column">
+							<p id = "speakerA_pic"></p>
+						</div>
+						<div class = "column"><p> </p></div>
+						<div class = "column" align = "right">
+							<p id = "speakerB_pic"></p>
+						</div>
+					</div>
+				</div>
+				<br><br>
+				<p id = "instructions">
+					Please listen carefully to the <b>entire</b> sound clip. You can replay the clip as many times as you'd like.
+				</p>
+				<br>
+				<div id = "audio">
+					<p id = "exp-clip"></p>
+					<input type = "radio" name = "agree-heard" id = "agree-heard" value = "agree-heard" />
+					<label for = "agree-heard">I was able to listen to the entire audio clip.</label>
+				</div>
+				<br><br>
+				<p id = "attn-check-header">
+					Which best describes what the speakers were talking about?
+				</p>
+				<div class = "radiobuttons-container">
+					<label for="memories" class="mdl-radio mdl-js-radio">
+						<input class="mdl-radio__button" id = "memories" type = "radio" name = "attn-check-message" value = "memories"/>
+						<span class = "mdl-radio__label">childhood memories</span>
+					</label>
+					<label for="breakfast" class="mdl-radio mdl-js-radio">
+						<input class="mdl-radio__button" id = "breakfast" type = "radio" name = "attn-check-message" value = "breakfast"/>
+						<span class = "mdl-radio__label">breakfast</span>
+					</label>
+					<label for="wedding" class="mdl-radio mdl-js-radio">
+						<input class="mdl-radio__button" id = "wedding" type = "radio" name = "attn-check-message" value = "wedding"/>
+						<span class = "mdl-radio__label">going to a wedding</span>
+					</label>
+					<label for="broken" class="mdl-radio mdl-js-radio">
+						<input class="mdl-radio__button" id = "broken" type = "radio" name = "attn-check-message" value = "broken"/>
+						<span class = "mdl-radio__label">something broken</span>
+					</label>
+					<label for="park" class="mdl-radio mdl-js-radio">
+						<input class="mdl-radio__button" id = "park" type = "radio" name = "attn-check-message" value = "park"/>
+						<span class = "mdl-radio__label">going to the park</span>
+					</label>
+					<label for="reunion" class="mdl-radio mdl-js-radio">
+						<input class="mdl-radio__button" id = "reunion" type = "radio" name = "attn-check-message" value = "reunion"/>
+						<span class = "mdl-radio__label">a family reunion</span>
+					</label>
+					<label for="book" class="mdl-radio mdl-js-radio">
+						<input class="mdl-radio__button" id = "book" type = "radio" name = "attn-check-message" value = "book"/>
+						<span class = "mdl-radio__label">a favorite book</span>
+					</label>
+					<label for="movies" class="mdl-radio mdl-js-radio">
+						<input class="mdl-radio__button" id = "movies" type = "radio" name = "attn-check-message" value = "movies"/>
+						<span class = "mdl-radio__label">going to the movies</span>
+					</label>
+					<label for="singing" class="mdl-radio mdl-js-radio">
+						<input class="mdl-radio__button" id = "singing" type = "radio" name = "attn-check-message" value = "singing"/>
+						<span class = "mdl-radio__label">singing</span>
+					</label>
+				</div>
+				<br><br>
+
+				<div class = "button">
+					<button id = "proceedbutton" onclick = "_s.button()">Proceed</button>
+				</div>
+
+				<br>
+				<p class="err" style="color:red">Please listen to the clip before continuing.</div>
+
+			</div>
+		</div>
+
+	<!-- page 2 of questions (get along, in charge, confidence, intelligence, agreeability) -->
+	<div class = "slide" id = "trial_2">
+		<p id = "question_intro"></p>
+		<br><br>
+		<div id = "age">
+			<p id = "age_intro"></p>
+			<table id = "age_sliders" class = "slider_table" align = "center">
+				<tr>
+					<td class = "left">0 years old</td>
+					<td class = "center"></td>
+					<td class = "right">80 years old</td>
+				</tr>
+				<tr>
+					<td colspan = "3"><p id = "speakerA_name" align = "left"></p></td>
+				</tr>
+				<tr>
+					<td colspan = "3">
+						<input type="range" name="A_age" id="A_age" min = "0" max = "80" class = "slider"></input>
+					</td>
+				</tr>
+				<tr>
+					<td colspan = "3"><p id = "speakerB_name" align = "left"></p></td>
+				</tr>
+				<tr>
+					<td colspan = "3">
+						<input type="range" name="B_age" id="B_age" min = "0" max = "80" class = "slider"></input>
+					</td>
+				</tr>
+			</table>
+		</div>
+		<div id = "friendliness">
+			<p id = "friendly_intro"></p>
+			<table id = "friendly_sliders" class = "slider_table" align = "center">
+				<tr>
+					<td class = "left">extremely unfriendly</td>
+					<td class = "center"></td>
+					<td class = "right">extremely friendly</td>
+				</tr>
+				<tr>
+					<td colspan = "3"><p id = "speakerA_name_friend" align = "left"></p></td>
+				</tr>
+				<tr>
+					<td colspan = "3">
+						<input type="range" name="A_friend" id="A_friend" min = "0" max = "100" class = "slider"></input>
+					</td>
+				</tr>
+				<tr>
+					<td colspan = "3"><p id = "speakerB_name_friend" align = "left"></p></td>
+				</tr>
+				<tr>
+					<td colspan = "3">
+						<input type="range" name="B_friend" id="B_friend" min = "0" max = "100" class = "slider"></input>
+					</td>
+				</tr>
+			</table>
+		</div>
+		<div id = "confidence">
+			<p id = "confident_intro"></p>
+			<table id = "confidence_sliders" class = "slider_table" align = "center">
+				<tr>
+					<td class = "left">extremely unconfident</td>
+					<td class = "center"></td>
+					<td class = "right">extremely confident</td>
+				</tr>
+				<tr>
+					<td colspan = "3"><p id = "speakerA_name_conf" align = "left"></p></td>
+				</tr>
+				<tr>
+					<td colspan = "3">
+						<input type="range" name="A_confident" id="A_confident" min = "0" max = "100" class = "slider"></input>
+					</td>
+				</tr>
+				<tr>
+					<td colspan = "3"><p id = "speakerB_name_conf" align = "left"></p></td>
+				</tr>
+				<tr>
+					<td colspan = "3">
+						<input type="range" name="B_confident" id="B_confident" min = "0" max = "100" class = "slider"></input>
+					</td>
+				</tr>
+			</table>
+		</div>
+		<div id = "intelligence">
+			<p id = "intelligent_intro"></p>
+			<table id = "intelligence_sliders" class = "slider_table" align = "center">
+				<tr>
+					<td class = "left">extremely unintelligent</td>
+					<td class = "center"></td>
+					<td class = "right">extremely intelligent</td>
+				</tr>
+				<tr>
+					<td colspan = "3"><p id = "speakerA_name_intel" align = "left"></p></td>
+				</tr>
+				<tr>
+					<td colspan = "3">
+						<input type="range" name="A_smart" id="A_smart" min = "0" max = "100" class = "slider"></input>
+					</td>
+				</tr>
+				<tr>
+					<td colspan = "3"><p id = "speakerB_name_intel" align = "left"></p></td>
+				</tr>
+				<tr>
+					<td colspan = "3">
+						<input type="range" name="B_smart" id="B_smart" min = "0" max = "100" class = "slider"></input>
+					</td>
+				</tr>
+			</table>
+		</div>
+		<div id = "agreeableness">
+			<p id = "agreeable_intro"></p>
+			<table id = "agreeable_sliders" class = "slider_table" align = "center">
+				<tr>
+					<td class = "left">extremely disagreeable</td>
+					<td class = "center"></td>
+					<td class = "right">extremely agreeable</td>
+				</tr>
+				<tr>
+					<td colspan = "3"><p id = "speakerA_name_agreeable" align = "left"></p></td>
+				</tr>
+				<tr>
+					<td colspan = "3">
+						<input type="range" name="A_agreeable" id="A_agreeable" min = "0" max = "100" class = "slider"></input>
+					</td>
+				</tr>
+				<tr>
+					<td colspan = "3"><p id = "speakerB_name_agreeable" align = "left"></p></td>
+				</tr>
+				<tr>
+					<td colspan = "3">
+						<input type="range" name="B_agreeable" id="B_agreeable" min = "0" max = "100" class = "slider"></input>
+					</td>
+				</tr>
+			</table>
+		</div>
+		<div id = "aggressiveness">
+			<p id = "aggro_intro"></p>
+			<table id = "aggro_sliders" class = "slider_table" align = "center">
+				<tr>
+					<td class = "left">extremely unagressive</td>
+					<td class = "center"></td>
+					<td class = "right">extremely aggressive</td>
+				</tr>
+				<tr>
+					<td colspan = "3"><p id = "speakerA_name_aggro" align = "left"></p></td>
+				</tr>
+				<tr>
+					<td colspan = "3">
+						<input type="range" name="A_aggro" id="A_aggro" min = "0" max = "100" class = "slider"></input>
+					</td>
+				</tr>
+				<tr>
+					<td colspan = "3"><p id = "speakerB_name_aggro" align = "left"></p></td>
+				</tr>
+				<tr>
+					<td colspan = "3">
+						<input type="range" name="B_aggro" id="B_aggro" min = "0" max = "100" class = "slider"></input>
+					</td>
+				</tr>
+			</table>
+		</div>
+
+		<div class = "button">
+			<button id = "proceedbutton" onclick = "_s.button()">Proceed</button>
+		</div>
+
+		<p class="err" style="color:red">Please adjust all the sliders before continuing.</div>
+
+	</div>
+
+	<!-- page 3 of questions (get along, in charge, confidence, intelligence, agreeability) -->
+	<div class = "slide" id = "trial_3">
+		<p id = "question_intro"></p>
+		<br><br>
+		<div id = "get_along">
+			<p id = "get_along_intro"></p>
+			<table id = "get_along_slider_table" class = "slider_table" align = "center">
+				<tr>
+					<td class = "left">Do not get along at all</td>
+					<td class = "center"></td>
+					<td class = "right">Get along extremely well</td>
+				</tr>
+				<tr>
+					<td colspan = "3">
+						<input type="range" name="get_along_slider" id="get_along_slider" min = "0" max = "100" class = "slider"></input>
+					</td>
+				</tr>
+			</table>
+		</div>
+		<div id = "in_charge">
+			<p id = "incharge_intro"></p>
+			<table id = "incharge_sliders" class = "slider_table" align = "center">
+				<tr>
+					<td class = "left"><p id="incharge_label_A"></p></td>
+					<td class = "center"></td>
+					<td class = "right"><p id="incharge_label_B"></p></td>
+				</tr>
+				<tr>
+					<td colspan = "3">
+						<input type="range" name="in_charge_slider" id="in_charge_slider" min = "0" max = "100" class = "slider"></input>
+					</td>
+				</tr>
+			</table>
+		</div>
+		<div id = "engagement">
+			<p id = "engaged_intro"></p>
+			<table id = "engagement_sliders" class = "slider_table" align = "center">
+				<tr>
+					<td class = "left">not at all engaged</td>
+					<td class = "center"></td>
+					<td class = "right">extremely engaged</td>
+				</tr>
+				<tr>
+					<td colspan = "3"><p id = "speakerA_name" align = "left"></p></td>
+				</tr>
+				<tr>
+					<td colspan = "3">
+						<input type="range" name="A_engaged" id="A_engaged" min = "0" max = "100" class = "slider"></input>
+					</td>
+				</tr>
+				<tr>
+					<td colspan = "3"><p id = "speakerB_name" align = "left"></p></td>
+				</tr>
+				<tr>
+					<td colspan = "3">
+						<input type="range" name="B_engaged" id="B_engaged" min = "0" max = "100" class = "slider"></input>
+					</td>
+				</tr>
+			</table>
+		</div>
+		<div id = "dismissiveness">
+			<p id = "dismissive_intro"></p>
+			<table id = "dismissiveness_sliders" class = "slider_table" align = "center">
+				<tr>
+					<td class = "left">not at all dismissive</td>
+					<td class = "center"></td>
+					<td class = "right">extremely dismissive</td>
+				</tr>
+				<tr>
+					<td colspan = "3"><p id = "speakerA_name_dis" align = "left"></p></td>
+				</tr>
+				<tr>
+					<td colspan = "3">
+						<input type="range" name="A_dismissive" id="A_dismissive" min = "0" max = "100" class = "slider"></input>
+					</td>
+				</tr>
+				<tr>
+					<td colspan = "3"><p id = "speakerB_name_dis" align = "left"></p></td>
+				</tr>
+				<tr>
+					<td colspan = "3">
+						<input type="range" name="B_dismissive" id="B_dismissive" min = "0" max = "100" class = "slider"></input>
+					</td>
+				</tr>
+			</table>
+		</div>
+
+		<div class = "button">
+			<button id = "proceedbutton" onclick = "_s.button()">Proceed</button>
+		</div>
+
+		<p class="err" style="color:red">Please adjust all the sliders before continuing.</div>
+
+	</div>
+
+
+	<!-- page 4 of questions (get along, in charge, confidence, intelligence, agreeability) -->
+	<div class = "slide" id = "trial_4">
+		<p id = "question_intro"></p>
+		<br><br>
+		<div id = "listened_to">
+			<p id = "listened_intro"></p>
+			<table id = "listened_slider_table" class = "slider_table" align = "center">
+				<tr>
+					<td class = "left">Not at all listened to</td>
+					<td class = "center"></td>
+					<td class = "right">Definitely felt listened to</td>
+				</tr>
+				<tr>
+					<td colspan = "3"><p id = "speakerA_name_listen" align = "left"></p></td>
+				</tr>
+				<tr>
+					<td colspan = "3">
+						<input type="range" name="A_listened" id="A_listened" min = "0" max = "100" class = "slider"></input>
+					</td>
+				</tr>
+				<tr>
+					<td colspan = "3"><p id = "speakerB_name_listen" align = "left"></p></td>
+				</tr>
+				<tr>
+					<td colspan = "3">
+						<input type="range" name="B_listened" id="B_listened" min = "0" max = "100" class = "slider"></input>
+					</td>
+				</tr>
+			</table>
+		</div>
+		<div id = "feel_interrupted">
+			<p id = "feel_int_intro"></p>
+			<table id = "feel_int_sliders" class = "slider_table" align = "center">
+				<tr>
+					<td class = "left">Not at all interrupted</td>
+					<td class = "center"></td>
+					<td class = "right">Definitely felt interrupted</td>
+				</tr>
+				<tr>
+					<td colspan = "3"><p id = "speakerA_name_fi" align = "left"></p></td>
+				</tr>
+				<tr>
+					<td colspan = "3">
+						<input type="range" name="A_feel_int" id="A_feel_int" min = "0" max = "100" class = "slider"></input>
+					</td>
+				</tr>
+				<tr>
+					<td colspan = "3"><p id = "speakerB_name_fi" align = "left"></p></td>
+				</tr>
+				<tr>
+					<td colspan = "3">
+						<input type="range" name="B_feel_int" id="B_feel_int" min = "0" max = "100" class = "slider"></input>
+					</td>
+				</tr>
+			</table>
+		</div>
+		<div id = "try_interrupt">
+			<p id = "try_int_intro"></p>
+			<table id = "try_int_sliders" class = "slider_table" align = "center">
+				<tr>
+					<td class = "left">Not at all trying to interrupt</td>
+					<td class = "center"></td>
+					<td class = "right">Definitely trying to interrupt</td>
+				</tr>
+				<tr>
+					<td colspan = "3"><p id = "speakerA_name_ti" align = "left"></p></td>
+				</tr>
+				<tr>
+					<td colspan = "3">
+						<input type="range" name="A_try_int" id="A_try_int" min = "0" max = "100" class = "slider"></input>
+					</td>
+				</tr>
+				<tr>
+					<td colspan = "3"><p id = "speakerB_name_ti" align = "left"></p></td>
+				</tr>
+				<tr>
+					<td colspan = "3">
+						<input type="range" name="B_try_int" id="B_try_int" min = "0" max = "100" class = "slider"></input>
+					</td>
+				</tr>
+			</table>
+		</div>
+		<div id = "controlling_convo">
+			<p id = "control_intro"></p>
+			<table id = "controlling_sliders" class = "slider_table" align = "center">
+				<tr>
+					<td class = "left">not at all in control</td>
+					<td class = "center"></td>
+					<td class = "right">completely in control</td>
+				</tr>
+				<tr>
+					<td colspan = "3"><p id = "speakerA_name_cont" align = "left"></p></td>
+				</tr>
+				<tr>
+					<td colspan = "3">
+						<input type="range" name="A_control" id="A_control" min = "0" max = "100" class = "slider"></input>
+					</td>
+				</tr>
+				<tr>
+					<td colspan = "3"><p id = "speakerB_name_cont" align = "left"></p></td>
+				</tr>
+				<tr>
+					<td colspan = "3">
+						<input type="range" name="B_control" id="B_control" min = "0" max = "100" class = "slider"></input>
+					</td>
+				</tr>
+			</table>
+		</div>
+		<div id = "open_ended">
+			<p id = "open_ended_prompt">(Optional): Is there anything else you can guess about the speakers or their relationship?</p>
+			<textarea id="open_ended" rows="3" cols="50"></textarea>
+		</div>
+
+		<div class = "button">
+			<button id = "proceedbutton" onclick = "_s.button()">Finish!</button>
+		</div>
+
+		<p class="err" style="color:red">Please adjust all the sliders before continuing.</div>
+
+	</div>
+
+
+	<!-- subject information (demographic & enjoyment, etc.) -->
+		<div class="slide" id="subj_info">
+			<div class="long_form">
+				<div class="subj_info_title">Additional information</div>
+
+				<p class="info">Answering these questions is optional, but will help us understand your answers.</p>
+
+				<p>Native Language: <input type="text" id="language"/></p>
+				<label>(the language(s) spoken at home when you were a child)</label>
+
+				<p>Did you read the instructions and do you think you did the study correctly?</p></br>
+				<label><input type="radio"  name="assess" value="No"/>No</label>
+				<label><input type="radio"  name="assess" value="Yes"/>Yes</label>
+				<label><input type="radio"  name="assess" value="Confused"/>I was confused</label>
+
+				<p>Were there any problems or bugs in the experiment?</p>
+				<textarea id="problems" rows="2" cols="50"></textarea>
+
+				<p>What do you think is a fair price for the work you did?</p>
+				<textarea id="fairprice" rows="1" cols="10"></textarea>
+
+				<p>Gender:
+					<select id="gender">
+						<label><option value=""/></label>
+						<label><option value="Male"/>Male</label>
+						<label><option value="Female"/>Female</label>
+						<label><option value="Other"/>Other/Prefer not to answer</label>
+					</select>
+				</p>
+
+				<p>Age: <input type="text" id="age"/></p>
+				<div id="checkboxes">
+					<p>What is your Race/Ethnicity? Select all that apply:</p>
+					<ul style="list-style-type:none;" style="display: inline-block;" align="center">  
+						<li><label><input name="raceX" type="checkbox" id="Asian"  
+							value="Asian"/>Asian</label></li>
+							<li><label><input name="raceX" type="checkbox" id="AA" value="AA"/> 
+							Black or African American</label></li>
+							<li><label><input name="raceX" type="checkbox" id="Latino" value="Latino"/>
+							Hispanic or Latino</label></li>
+							<li><label><input name="raceX" type="checkbox" id="PI" value="PI"/>
+							Native Hawaiian or Other Pacific Islander </label></li>
+							<li><label><input name="raceX" type="checkbox" id="White" value="White"/>
+							White</label>
+						</li>
+					</ul>
+				</div>
+
+				<p>Level Of Education:
+					<select id="education">
+						<label><option value="-1"/></label>
+						<label><option value="0"/>Some High School</label>
+						<label><option value="1"/>Graduated High School</label>
+						<label><option value="2"/>Some College</label>
+						<label><option value="3"/>Graduated College</label>
+						<label><option value="4"/>Hold a higher degree</label>
+					</select>
+				</p>
+
+				<p>Which of the following options do you feel your political beliefs most closely align with?</p>
+				<select id="affiliation">
+					<label><option value="-1"/></label>
+					<label><option value="0"/>Liberal Democrat (most liberal)</label>
+					<label><option value="1"/>Democratic-leaning Independent</label>
+					<label><option value="2"/>Moderate Democrat</label>
+					<label><option value="3"/>Independent (most neutral)</label>
+					<label><option value="4"/>Moderate Republican</label>
+					<label><option value="5"/>Republican-leaning Independent</label>
+					<label><option value="6"/>Conservative Republican (most conservative)</label>
+				</select>
+
+				<p>Did you enjoy the study?</p>
+				<select id="enjoyment">
+					<label><option value="-1"></option></label>
+					<label><option value="0">Worse than the Average study</option></label>
+					<label><option value="1" >An Average study</option></label>
+					<label><option value="2">Better than average study</option></label>
+				</select>
+
+				<p>We would be interested in any comments you have about this experiment. Please type them here:</p>
+				<textarea id="comments" rows="3" cols="50"></textarea>
+
+				<br><br>
+
+				<button onclick="_s.submit()">Submit</button>
+
+			</div>
+		</div>
+
+	<!-- thanks slide -->
+		<div class = "slide" id="thanks">
+			<br><br>
+			<p  class="big" id="thanks-text">Thanks for your time!</p>
+		</div>
+
+	<!-- progress bar -->
+		<div class="progress">
+			<span>Progress:</span>
+			<div class="bar-wrapper">
+				<div class="bar" width="0%">
+				</div>
+			</div>
+		</div>
+
+
+</body>
+</html>

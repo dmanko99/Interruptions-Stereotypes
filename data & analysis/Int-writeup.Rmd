@@ -1,0 +1,57 @@
+---
+title: "Look Whose Interrupting"
+subtitle: "Racialized and Gendered Judgments in Interruptive Contexts"
+author: "Dean Manko, Judith Degen, Katherine Hilton, Brandon Waldon"
+date: "Spring 2022"
+urlcolor: blue
+output:
+  bookdown::pdf_book:
+    toc: true
+    fig_caption: yes
+    includes:
+      in_header: plot_formatting.tex
+    toc_depth: 4
+    highlight: tango
+
+bibliography: [references/references.bib]
+biblio-style: apalike
+nocite: '@*'
+---
+```{r setup, echo = FALSE, message = FALSE}
+library("knitr") # for knitting things
+library("tidyverse") # for all things tidyverse
+library("dplyr")
+library("pwr")
+library("lme4")
+library("lmerTest")
+library("ggplot2")
+library("bootstrap")
+library("tm")
+
+# these options here change the formatting of how comments are rendered
+opts_chunk$set(
+  comment = "",
+  results = "hold",
+  fig.show = "hold")
+
+# include references for used packages
+write_bib(.packages(), "references/packages.bib") 
+
+#set the default ggplot theme
+theme_set(theme_classic())
+```
+
+
+
+Body of thesis goes here — *whoa*.
+
+```{r}
+plot(cars)
+```
+
+Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Cmd+Option+I*.
+
+When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Cmd+Shift+K* to preview the HTML file). 
+
+The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
+
