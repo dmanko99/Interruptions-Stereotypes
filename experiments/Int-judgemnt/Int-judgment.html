@@ -586,12 +586,184 @@
 		</div>
 
 		<div class = "button">
-			<button id = "proceedbutton" onclick = "_s.button()">Finish!</button>
+			<button id = "proceedbutton" onclick = "_s.button()">Proceed</button>
 		</div>
 
 		<p class="err" style="color:red">Please adjust all the sliders before continuing.</div>
 
 	</div>
+
+	<!-- subject explicit attitudes about race & gender -->
+		<div class = "slide" id = "attitudes">
+			<p id = "header"> Now for a couple of different questions!</p>
+			<br>
+			<p id = "attitudes-intro">
+				There are a lot of different ideas about how people differ from each other. We're interested in finding out
+				which ideas about men and women, and Black and White Americans, are most common and what your opinion is on
+				the matter.
+			</p>
+			<br>
+			<p id = "gender-instructions">
+				Please read each description and indicate whether <b><u>other people</u></b> think it generally describes men
+				or women better. Then please tell us <b><u>your opinion</u></b> on how men and women might be different in
+				<b><u>your ideal world</u></b>.
+			</p>
+			<br>
+			<table id = gender-attitudes>
+				<tr>
+					<td>&nbsp;</td>
+					<th colspan = "2" align = "center">
+						Do <b><u>other people</u></b> generally believe this applies more to men or to women?
+					</th>
+					<th colspan = "5" align = "center">
+						In <b><u>your ideal world</u></b>, this discription would apply…
+					</th>
+				</tr>
+				<tr>
+					<td>&nbsp;</td>
+					<td align = "center">Men</td>
+					<td align = "center">Women</td>
+					<td align = "center">mostly to men</td>
+					<td align = "center">slightly more to men</td>
+					<td align = "center">equally to men and women</td>
+					<td align = "center">slightly more to women</td>
+					<td align = "center">mostly to women</td>
+				</tr>
+				<tr>
+					<th align = "left">competitive</th>
+					<td align = "center"><input type = "radio" name = "gen_other_comp" value = "Men"></td>
+					<td align = "center"><input type = "radio" name = "gen_other_comp" value = "Women"></td>
+					<td align = "center"><input type = "radio" name = "gen_me_comp" value = "1"></td>
+					<td align = "center"><input type = "radio" name = "gen_me_comp" value = "2"></td>
+					<td align = "center"><input type = "radio" name = "gen_me_comp" value = "3"></td>
+					<td align = "center"><input type = "radio" name = "gen_me_comp" value = "4"></td>
+					<td align = "center"><input type = "radio" name = "gen_me_comp" value = "5"></td>
+				</tr>
+				<tr>
+					<th align = "left">polite</th>
+					<td align = "center"><input type = "radio" name = "gen_other_pol" value = "Men"></td>
+					<td align = "center"><input type = "radio" name = "gen_other_pol" value = "Women"></td>
+					<td align = "center"><input type = "radio" name = "gen_me_pol" value = "1"></td>
+					<td align = "center"><input type = "radio" name = "gen_me_pol" value = "2"></td>
+					<td align = "center"><input type = "radio" name = "gen_me_pol" value = "3"></td>
+					<td align = "center"><input type = "radio" name = "gen_me_pol" value = "4"></td>
+					<td align = "center"><input type = "radio" name = "gen_me_pol" value = "5"></td>
+				</tr>
+				<tr>
+					<th align = "left">good listeners</th>
+					<td align = "center"><input type = "radio" name = "gen_other_listen" value = "Men"></td>
+					<td align = "center"><input type = "radio" name = "gen_other_listen" value = "Women"></td>
+					<td align = "center"><input type = "radio" name = "gen_me_listen" value = "1"></td>
+					<td align = "center"><input type = "radio" name = "gen_me_listen" value = "2"></td>
+					<td align = "center"><input type = "radio" name = "gen_me_listen" value = "3"></td>
+					<td align = "center"><input type = "radio" name = "gen_me_listen" value = "4"></td>
+					<td align = "center"><input type = "radio" name = "gen_me_listen" value = "5"></td>
+				</tr>
+				<tr>
+					<th align = "left">interrupt other people</th>
+					<td align = "center"><input type = "radio" name = "gen_other_interrupt" value = "Men"></td>
+					<td align = "center"><input type = "radio" name = "gen_other_interrupt" value = "Women"></td>
+					<td align = "center"><input type = "radio" name = "gen_me_interrupt" value = "1"></td>
+					<td align = "center"><input type = "radio" name = "gen_me_interrupt" value = "2"></td>
+					<td align = "center"><input type = "radio" name = "gen_me_interrupt" value = "3"></td>
+					<td align = "center"><input type = "radio" name = "gen_me_interrupt" value = "4"></td>
+					<td align = "center"><input type = "radio" name = "gen_me_interrupt" value = "5"></td>
+				</tr>
+				<tr>
+					<th align = "left">get interrupted by others</th>
+					<td align = "center"><input type = "radio" name = "gen_other_interrupted" value = "Men"></td>
+					<td align = "center"><input type = "radio" name = "gen_other_interrupted" value = "Women"></td>
+					<td align = "center"><input type = "radio" name = "gen_me_interrupted" value = "1"></td>
+					<td align = "center"><input type = "radio" name = "gen_me_interrupted" value = "2"></td>
+					<td align = "center"><input type = "radio" name = "gen_me_interrupted" value = "3"></td>
+					<td align = "center"><input type = "radio" name = "gen_me_interrupted" value = "4"></td>
+					<td align = "center"><input type = "radio" name = "gen_me_interrupted" value = "5"></td>
+				</tr>
+			</table>
+			<br>
+			<p id = "race-instructions">
+				Please read each description and indicate whether <b><u>other people</u></b> think it generally describes Black
+				or White people better. Then please tell us <b><u>your opinion</u></b> on how Black and White people might be
+				different in <b><u>your ideal world</u></b>.
+			</p>
+			<br>
+			<table id = gender-attitudes>
+				<tr>
+					<td>&nbsp;</td>
+					<th colspan = "2" align = "center">
+						Do <b><u>other people</u></b> generally believe this applies more to Black or to White Americans?
+					</th>
+					<th colspan = "5" align = "center">
+						In <b><u>your ideal world</u></b>, this discription would apply…
+					</th>
+				</tr>
+				<tr>
+					<td>&nbsp;</td>
+					<td align = "center">Black Americans</td>
+					<td align = "center">White Americans</td>
+					<td align = "center">mostly to Black Americans</td>
+					<td align = "center">slightly more to Black Americans</td>
+					<td align = "center">equally to Black and White Americans</td>
+					<td align = "center">slightly more to White Americans</td>
+					<td align = "center">mostly to White Americans</td>
+				</tr>
+				<tr>
+					<th align = "left">competitive</th>
+					<td align = "center"><input type = "radio" name = "race_other_comp" value = "Men"></td>
+					<td align = "center"><input type = "radio" name = "race_other_comp" value = "Women"></td>
+					<td align = "center"><input type = "radio" name = "race_me_comp" value = "1"></td>
+					<td align = "center"><input type = "radio" name = "race_me_comp" value = "2"></td>
+					<td align = "center"><input type = "radio" name = "race_me_comp" value = "3"></td>
+					<td align = "center"><input type = "radio" name = "race_me_comp" value = "4"></td>
+					<td align = "center"><input type = "radio" name = "race_me_comp" value = "5"></td>
+				</tr>
+				<tr>
+					<th align = "left">polite</th>
+					<td align = "center"><input type = "radio" name = "race_other_pol" value = "Men"></td>
+					<td align = "center"><input type = "radio" name = "race_other_pol" value = "Women"></td>
+					<td align = "center"><input type = "radio" name = "race_me_pol" value = "1"></td>
+					<td align = "center"><input type = "radio" name = "race_me_pol" value = "2"></td>
+					<td align = "center"><input type = "radio" name = "race_me_pol" value = "3"></td>
+					<td align = "center"><input type = "radio" name = "race_me_pol" value = "4"></td>
+					<td align = "center"><input type = "radio" name = "race_me_pol" value = "5"></td>
+				</tr>
+				<tr>
+					<th align = "left">good listeners</th>
+					<td align = "center"><input type = "radio" name = "race_other_listen" value = "Men"></td>
+					<td align = "center"><input type = "radio" name = "race_other_listen" value = "Women"></td>
+					<td align = "center"><input type = "radio" name = "race_me_listen" value = "1"></td>
+					<td align = "center"><input type = "radio" name = "race_me_listen" value = "2"></td>
+					<td align = "center"><input type = "radio" name = "race_me_listen" value = "3"></td>
+					<td align = "center"><input type = "radio" name = "race_me_listen" value = "4"></td>
+					<td align = "center"><input type = "radio" name = "race_me_listen" value = "5"></td>
+				</tr>
+				<tr>
+					<th align = "left">interrupt other people</th>
+					<td align = "center"><input type = "radio" name = "race_other_interrupt" value = "Men"></td>
+					<td align = "center"><input type = "radio" name = "race_other_interrupt" value = "Women"></td>
+					<td align = "center"><input type = "radio" name = "race_me_interrupt" value = "1"></td>
+					<td align = "center"><input type = "radio" name = "race_me_interrupt" value = "2"></td>
+					<td align = "center"><input type = "radio" name = "race_me_interrupt" value = "3"></td>
+					<td align = "center"><input type = "radio" name = "race_me_interrupt" value = "4"></td>
+					<td align = "center"><input type = "radio" name = "race_me_interrupt" value = "5"></td>
+				</tr>
+				<tr>
+					<th align = "left">get interrupted by others</th>
+					<td align = "center"><input type = "radio" name = "race_other_interrupted" value = "Men"></td>
+					<td align = "center"><input type = "radio" name = "race_other_interrupted" value = "Women"></td>
+					<td align = "center"><input type = "radio" name = "race_me_interrupted" value = "1"></td>
+					<td align = "center"><input type = "radio" name = "race_me_interrupted" value = "2"></td>
+					<td align = "center"><input type = "radio" name = "race_me_interrupted" value = "3"></td>
+					<td align = "center"><input type = "radio" name = "race_me_interrupted" value = "4"></td>
+					<td align = "center"><input type = "radio" name = "race_me_interrupted" value = "5"></td>
+				</tr>
+			</table>
+			<br>
+			<div class = "button">
+				<button id = "proceedbutton" onclick = "_s.button()">Finish!</button>
+			</div>
+			<br>
+		</div>
 
 
 	<!-- subject information (demographic & enjoyment, etc.) -->

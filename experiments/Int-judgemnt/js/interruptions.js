@@ -469,6 +469,69 @@ function make_slides(f) {
 
 	});
 
+	//gender & race attitudes slide
+	slides.attitudes = slide({
+		name : "attitudes",
+		start : function() {
+			$('.err').hide();
+		},
+
+		button : function() {
+			if ($('input[name="gen_other_comp"]:checked') == null ||
+				$('input[name="gen_me_comp"]:checked') == null ||
+				$('input[name="gen_other_pol"]:checked') == null ||
+				$('input[name="gen_me_pol"]:checked') == null ||
+				$('input[name="gen_other_listen"]:checked') == null ||
+				$('input[name="gen_me_listen"]:checked') == null ||
+				$('input[name="gen_other_interrupt"]:checked') == null ||
+				$('input[name="gen_me_interrupt"]:checked') == null ||
+				$('input[name="gen_other_interrupted"]:checked') == null ||
+				$('input[name="gen_me_interrupted"]:checked') == null ||
+				$('input[name="race_other_comp"]:checked') == null ||
+				$('input[name="race_me_comp"]:checked') == null ||
+				$('input[name="race_other_pol"]:checked') == null ||
+				$('input[name="race_me_pol"]:checked') == null ||
+				$('input[name="race_other_listen"]:checked') == null ||
+				$('input[name="race_me_listen"]:checked') == null ||
+				$('input[name="race_other_interrupt"]:checked') == null ||
+				$('input[name="race_me_interrupt"]:checked') == null ||
+				$('input[name="race_other_interrupted"]:checked') == null ||
+				$('input[name="race_me_interrupted"]:checked') == null) {
+
+				$('.err').show();
+
+			} else {
+				this.log_responses();
+				exp.go();
+			 }
+		},
+
+		log_responses : function() {
+				exp.data_trials["gender_competitive"] = $('input[name="gen_other_comp"]:checked').val();
+				exp.data_trials["gender_competitive_score"] = $('input[name="gen_me_comp"]:checked').val();
+				exp.data_trials["gender_polite"] = $('input[name="gen_other_pol"]:checked').val();
+				exp.data_trials["gender_polite_score"] = $('input[name="gen_me_pol"]:checked').val();
+				exp.data_trials["gender_listener"] = $('input[name="gen_other_listen"]:checked').val();
+				exp.data_trials["gender_listener_score"] = $('input[name="gen_me_listen"]:checked').val();
+				exp.data_trials["gender_interrupter"] = $('input[name="gen_other_interrupt"]:checked').val();
+				exp.data_trials["gender_interrupter_score"] = $('input[name="gen_me_interrupt"]:checked').val();
+				exp.data_trials["gender_interrupted"] = $('input[name="gen_other_interrupted"]:checked').val();
+				exp.data_trials["gender_interrupted_score"] = $('input[name="gen_me_interrupted"]:checked').val();
+
+				exp.data_trials["race_competitive"] = $('input[name="race_other_comp"]:checked').val();
+				exp.data_trials["race_competitive_score"] = $('input[name="race_me_comp"]:checked').val();
+				exp.data_trials["race_polite"] = $('input[name="race_other_pol"]:checked').val();
+				exp.data_trials["race_polite_score"] = $('input[name="race_me_pol"]:checked').val();
+				exp.data_trials["race_listener"] = $('input[name="race_other_listen"]:checked').val();
+				exp.data_trials["race_listener_score"] = $('input[name="race_me_listen"]:checked').val();
+				exp.data_trials["race_interrupter"] = $('input[name="race_other_interrupt"]:checked').val();
+				exp.data_trials["race_interrupter_score"] = $('input[name="race_me_interrupt"]:checked').val();
+				exp.data_trials["race_interrupted"] = $('input[name="race_other_interrupted"]:checked').val();
+				exp.data_trials["race_interrupted_score"] = $('input[name="race_me_interrupted"]:checked').val();
+		}
+
+	});
+
 	//subject information slide
 	slides.subj_info = slide({
 		name : "subj_info",
@@ -567,6 +630,7 @@ function init() {
 		"trial_2",
 		"trial_3",
 		"trial_4",
+		"attitudes",
 		"subj_info",
 		"thanks"
 	];
