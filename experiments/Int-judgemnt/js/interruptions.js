@@ -166,6 +166,87 @@ function make_slides(f) {
 		}
 	});
 
+	//practice trial
+	slides.practice = slide({
+		name : "practice",
+		start : function() {
+			$('.err_1').hide();
+			$('.err_2').hide();
+			$('.practice-1').show();
+			$('.practice-2').hide();
+
+			//setting up response data
+			var A_response;
+			var B_response;
+			
+			//setting stim-dependent fields
+			var practice_intro = "This conversation takes place beteen " + 
+				exp.practice_A + " (pictured on the left, speaking first) and " +
+				exp.practice_B + " (pictured on the right, speaking second).";
+
+			var practice_interrupter_face = '<img src = "' +
+																			exp.practice_face_A + '"alt = "' +
+																			exp.practice_A + '" style="width:150px;height:150px;">';
+			var practice_interruptee_face = '<img src = "' +
+																			exp.practice_face_B + '"alt = "' +
+																			exp.practice_B + '" style="width:150px;height:150px;">';
+			var practice_audio = '<audio controls src = "' + exp.practice_clip +
+													'"type = "audio/wav"></audio>';
+			var practice_slider_intro = "How <strong>social</strong> do " + exp.practice_A + " and " + exp.practice_B + " seem?";
+
+
+			//changing text
+			document.getElementById('practice-intro').innerHTML = practice_intro;
+			document.getElementById('practice-A-name').innerHTML = exp.practice_A;
+			document.getElementById('practice-B-name').innerHTML = exp.practice_B;
+			document.getElementById('practice-speakerA-pic').innerHTML = practice_interrupter_face;
+			document.getElementById('practice-speakerB-pic').innerHTML = practice_interruptee_face;
+			document.getElementById('practice-clip').innerHTML = practice_audio;
+			document.getElementById('social_intro').innerHTML = practice_slider_intro;
+		},
+
+		button : function() {
+			if ($('.practice-1').is(":visible")) {
+				if (document.getElementById("p-agree-heard").checked == false) {
+					$('.err_1').show();
+				} else if (document.getElementById("practice-A-response").value == "50" || 
+						document.getElementById("practice-B-response").value == "50") {
+					$('.err_2').show();
+				} else {
+					A_response = document.getElementById("practice-A-response").value;
+					B_response = document.getElementById("practice-B-response").value;				
+					$('.practice-1').hide();
+					$('.err_1').hide();
+					$('.err_2').hide();
+					this.setup_2(A_response, B_response);
+					$('.practice-2').show();
+				}
+			} else { //on page 2
+				exp.go();
+			}
+		},
+
+		setup_2 : function(ar, br) {
+			var A_explanation;
+			var B_explanation;
+			if (ar > 50) {
+				A_explanation = "You rated " + exp.practice_A + " as being more <i>social</i> than <i>anti-social</i>.";
+			} else {
+				A_explanation = "You rated " + exp.practice_A + " as being more <i>anti-social</i> than <i>social</i>.";
+			}
+			if (br > 50) {
+				B_explanation = "You rated " + exp.practice_B + " as being more <i>social</i> than <i>anti-social</i>.";
+			} else {
+				B_explanation = "You rated " + exp.practice_B + " as being more <i>anti-social</i> than <i>social</i>.";
+			}
+			document.getElementById("speakerA-rating").innerHTML = A_explanation;
+			document.getElementById("speakerB-rating").innerHTML = B_explanation;
+		}
+
+	});
+
+
+
 	//main experiment slides
 
 	//page 1: clip and attention check
@@ -182,7 +263,7 @@ function make_slides(f) {
 						speakerA +
 						" (pictured on the left) and " +
 						speakerB + 
-						" (pictured on the right)."
+						" (pictured on the right).";
 			var interrupter_face = '<img src = "' + 
 														 exp.interrupter_face +
 														 '" alt="' + speakerA + '" style="width:150px;height:150px;">';
@@ -347,9 +428,9 @@ function make_slides(f) {
 			document.getElementById('engaged_intro').innerHTML = engaged_intro;
 			document.getElementById('dismissive_intro').innerHTML = dismissive_intro;
 
-			document.getElementById('speakerA_name').innerHTML = speakerA;
+			document.getElementById('speakerA_name_engaged').innerHTML = speakerA;
 			document.getElementById('speakerA_name_dis').innerHTML = speakerA;
-			document.getElementById('speakerB_name').innerHTML = speakerB;
+			document.getElementById('speakerB_name_engaged').innerHTML = speakerB;
 			document.getElementById('speakerB_name_dis').innerHTML = speakerB;
 		},
 
@@ -611,6 +692,15 @@ function init() {
 		exp.interruptee_sex = "Male";
 	}
 
+	//setting faces/names/audio for practice trial
+	exp.p_faces = _.shuffle(practice_faces);
+	exp.p_names = _.shuffle(practice_names);
+	exp.practice_A = exp.p_names.pop();
+	exp.practice_B = exp.p_names.pop();
+	exp.practice_face_A = exp.p_faces.pop();
+	exp.practice_face_B = exp.p_faces.pop();
+	exp.practice_clip = _.sample(practice_clips);
+
 	//tracking participants' setup
 	exp.system = {
 		Browser : BrowserDetect.browser,
@@ -626,6 +716,7 @@ function init() {
 		"bot",
 		"info",
 		"eng_check",
+		"practice",
 		"trial_1",
 		"trial_2",
 		"trial_3",

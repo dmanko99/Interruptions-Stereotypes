@@ -1,3 +1,18 @@
+//For practice trial
+	//names
+	var practice_names = ["Alex",
+						"John",
+						"David",
+						"James"]
+
+	//faces
+	var practice_faces = ["stims/face_stims/practice/pface1.png",
+						"stims/face_stims/practice/pface2.png"]
+
+	//audio clips, taken from Santa Barbara's SBCSAE
+	var practice_clips = ["stims/audio_stims/practice/pClip1.wav",
+						"stims/audio_stims/practice/pClip2.wav"]
+
 //Possible names to be used
 	var w_f_names = ["Emily",
 					"Hannah",

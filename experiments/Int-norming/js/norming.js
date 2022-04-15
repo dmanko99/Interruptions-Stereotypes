@@ -83,60 +83,78 @@ function make_slides(f) {
 		}
 	});
 
-	//main experiment slides
-
-	//page 1: clip and attention check
-	slides.trial_1 = slide({
-		name : "trial_1",
+	//practice
+	slides.practice = slide({
+		name : "practice",
 		start : function() {
 			$('.err').hide();
+			$('.practice-1').show();
+			$('.practice-2').hide();
 
-			//replacing necessary text
-			var speakerA = exp.interrupter;
-			var speakerB = exp.interruptee;
+			//setting up response data
+			var response;
 
-			var intros = "This conversation takes place between " +
-						speakerA +
-						" (pictured on the left) and " +
-						speakerB + 
-						" (pictured on the right)."
-			var interrupter_face = '<img src = "' + 
-				exp.interrupter_face +
-				'" alt="' + speakerA + '" style="width:150px;height:150px;">';
-			var interruptee_face = '<img src = "' + 
-				exp.interruptee_face +
-				'" alt="' + speakerB + '" style="width:150px;height:150px;">';
-			var audio_clip = '<audio controls src = "' + clip +
-				'"type = "audio/wav"></audio>';
+			//selecting practice stimuli
+			var first = _.sample(practice_names);
+			var face_pic = _.sample(practice_faces);
+			var recording = _.sample(practice_clips);
 
+			//setting stim-dependent fields
+			var practice_intro = "This is " + first + " :";
+			var practice_picture = '<img src = "' + face_pic + '" alt="' + 
+							first + '" style="width:150px;height:150px;">';
+			var practice_audio = '<audio controls src = "' + recording + '"type = "audio/wav"></audio>';
+			var practice_instructions = "After listening to the recording below, " +
+								"indicate how likely it is that " + first +
+								" produced the audio you listened to.";
 
-			//page 1: changing text
-			document.getElementById('speaker-intros').innerHTML = intros;
-			document.getElementById('speakerA_pic').innerHTML = interrupter_face;
-			document.getElementById('speakerB_pic').innerHTML = interruptee_face;
-			document.getElementById('exp-clip').innerHTML = audio_clip;
+			//displaying stim-dependent fields
+			document.getElementById('practice-intro').innerHTML = practice_intro;
+			document.getElementById('practice-pic').innerHTML = practice_picture;
+			document.getElementById('practice-instructions').innerHTML = practice_instructions;
+			document.getElementById('practice-audio-clip').innerHTML = practice_audio;
+
+			//display slider
+			this.init_sliders();
+
+			//erase current slider value
+			exp.sliderPost = null;
+
 		},
 
 		button : function () {
-			if (document.getElementById("agree-heard").checked) {
-				this.log_responses();
+			if ($('.practice-1').is(":visible")) {
+				if (exp.sliderPost == null) {
+					$(".err1").show();
+				} else if (exp.sliderPost > .5) {
+					$(".err2").show();
+				}else {
+					response = exp.sliderPost;				
+					$('.practice-1').hide();
+					$('.err_1').hide();
+					this.setup_2(response);
+					$('.practice-2').show();
+				}
+			} else { //on page 2
 				exp.go();
-			} else {
-				$('.err').show();
 			}
 		},
 
-		log_responses : function() {
-			//record basic data
-				exp.data_trials.push({
-					"interruption_style" : exp.interruptiveness,
-					"speaker_A" : exp.interrupter,
-					"speaker_B" : exp.interruptee,
-					"int_race" : exp.interrupter_race,
-					"int_sex" : exp.interrupter_sex,
-					"m_race" : exp.race,
-				});
-		}
+		setup_2 : function(r) {
+			var explanation;
+			if (r > .25) {
+				explanation = "You said it was pretty unlikely.";
+			} else {
+				explanation = "You said it was not at all likely.";
+			};
+			document.getElementById("practice-rating").innerHTML = explanation;
+		},
+
+		init_sliders : function () {
+			utils.make_slider("#practice-single_slider", function(event, ui) {
+				exp.sliderPost = ui.value;
+			});
+		},
 	});
 
 	//main norming task
@@ -376,6 +394,7 @@ function init() {
 	exp.structure = [
 		"bot",
 		"info",
+		"practice",
 		"main_task",
 		"subj_info",
 		"thanks"
