@@ -322,6 +322,17 @@ function make_slides(f) {
 			var speakerB = exp.interruptee;
 			var q_intro = "Based on the sound clip you just listened to, please tell us what you can guess about <strong>" +
 										speakerA + "</strong> and <strong>" + speakerB + "</strong> and their relationship.";
+			var replay_intro = "If you need a refresher, you can listen to the conversation between " +
+										speakerA + " (left) and " + speakerB + " (right) below:";
+			var interrupter_face = '<img src = "' + 
+														 exp.interrupter_face +
+														 '" alt="' + speakerA + '" style="width:150px;height:150px;">';
+			var interruptee_face = '<img src = "' + 
+														 exp.interruptee_face +
+														 '" alt="' + speakerB + '" style="width:150px;height:150px;">';
+			var audio_clip = '<audio controls src = "' + clip +
+											 '"type = "audio/wav"></audio>';
+
 			
 			var age_intro = "How old do you think " + speakerA + " and " + speakerB + " are?";
 			var friendly_intro = "How <strong>friendly</strong> do " + speakerA + " and " + speakerB + " seem?";
@@ -331,6 +342,12 @@ function make_slides(f) {
 			var aggro_intro = "How <strong>aggressive</strong> do " + speakerA + " and " + speakerB + " seem?";
 
 			document.getElementById('question_intro').innerHTML = q_intro;
+
+			document.getElementById('replay-intro_t2').innerHTML = replay_intro;
+			document.getElementById('speakerA_pic_t2').innerHTML = interrupter_face;
+			document.getElementById('speakerB_pic_t2').innerHTML = interruptee_face;
+			document.getElementById('exp-clip_t2').innerHTML = audio_clip;
+			
 			document.getElementById('age_intro').innerHTML = age_intro;
 			document.getElementById('friendly_intro').innerHTML = friendly_intro;
 			document.getElementById('confident_intro').innerHTML = conf_intro;
@@ -412,6 +429,16 @@ function make_slides(f) {
 			var speakerB = exp.interruptee;
 			var q_intro = "Based on the sound clip you just listened to, please tell us what you can guess about <strong>" +
 										speakerA + "</strong> and <strong>" + speakerB + "</strong> and their relationship.";
+			var replay_intro = "If you need a refresher, you can listen to the conversation between " +
+										speakerA + " (left) and " + speakerB + " (right) below:";
+			var interrupter_face = '<img src = "' + 
+														 exp.interrupter_face +
+														 '" alt="' + speakerA + '" style="width:150px;height:150px;">';
+			var interruptee_face = '<img src = "' + 
+														 exp.interruptee_face +
+														 '" alt="' + speakerB + '" style="width:150px;height:150px;">';
+			var audio_clip = '<audio controls src = "' + clip +
+											 '"type = "audio/wav"></audio>';
 			
 			var get_along_intro = "How well do you think " + speakerA + " and " + speakerB + " <strong>get along</strong>?";
 			var incharge_intro = "Who do you think is <strong>generally in charge</strong> in " + speakerA + " and " + speakerB + "'s relationship?";
@@ -421,6 +448,12 @@ function make_slides(f) {
 			var dismissive_intro = "How <strong>dismissive</strong> did each person seem?";
 
 			document.getElementById('question_intro').innerHTML = q_intro;
+
+			document.getElementById('replay-intro_t3').innerHTML = replay_intro;
+			document.getElementById('speakerA_pic_t3').innerHTML = interrupter_face;
+			document.getElementById('speakerB_pic_t3').innerHTML = interruptee_face;
+			document.getElementById('exp-clip_t3').innerHTML = audio_clip;
+
 			document.getElementById('get_along_intro').innerHTML = get_along_intro;
 			document.getElementById('incharge_intro').innerHTML = incharge_intro;
 			document.getElementById('incharge_label_A').innerHTML = incharge_label_A;
@@ -483,6 +516,16 @@ function make_slides(f) {
 			var speakerB = exp.interruptee;
 			var q_intro = "Based on the sound clip you just listened to, please tell us what you can guess about <strong>" +
 										speakerA + "</strong> and <strong>" + speakerB + "</strong> and their relationship.";
+			var replay_intro = "If you need a refresher, you can listen to the conversation between " +
+										speakerA + " (left) and " + speakerB + " (right) below:";
+			var interrupter_face = '<img src = "' + 
+														 exp.interrupter_face +
+														 '" alt="' + speakerA + '" style="width:150px;height:150px;">';
+			var interruptee_face = '<img src = "' + 
+														 exp.interruptee_face +
+														 '" alt="' + speakerB + '" style="width:150px;height:150px;">';
+			var audio_clip = '<audio controls src = "' + clip +
+											 '"type = "audio/wav"></audio>';
 			
 			var listened_intro = "How likely is it that each person felt <strong>listened to</strong>?";
 			var feel_int_intro = "Do you think either of them <strong>felt interrupted</strong>?";
@@ -491,6 +534,15 @@ function make_slides(f) {
 			var control_intro = "How much do you think each person was <strong>controlling the conversation</strong>?";
 
 			document.getElementById('question_intro').innerHTML = q_intro;
+			
+			document.getElementById('replay-intro_t4').innerHTML = replay_intro;
+			document.getElementById('speakerA_pic_t4').innerHTML = interrupter_face;
+			document.getElementById('speakerB_pic_t4').innerHTML = interruptee_face;
+			document.getElementById('exp-clip_t4').innerHTML = audio_clip;
+
+			document.getElementById('speakerA_pic').innerHTML = interrupter_face;
+			document.getElementById('speakerB_pic').innerHTML = interruptee_face;
+			document.getElementById('exp-clip').innerHTML = audio_clip;
 			document.getElementById('listened_intro').innerHTML = listened_intro;
 			document.getElementById('feel_int_intro').innerHTML = feel_int_intro;
 			document.getElementById('try_int_intro').innerHTML = try_int_intro;
