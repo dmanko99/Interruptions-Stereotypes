@@ -100,7 +100,7 @@ function make_slides(f) {
 			var recording = _.sample(practice_clips);
 
 			//setting stim-dependent fields
-			var practice_intro = "This is " + first + " :";
+			var practice_intro = "This is " + first + ":";
 			var practice_picture = '<img src = "' + face_pic + '" alt="' + 
 							first + '" style="width:150px;height:150px;">';
 			var practice_audio = '<audio controls src = "' + recording + '"type = "audio/wav"></audio>';

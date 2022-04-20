@@ -207,7 +207,9 @@ function make_slides(f) {
 
 		button : function() {
 			if ($('.practice-1').is(":visible")) {
-				if (document.getElementById("p-agree-heard").checked == false) {
+				var attn_check_responses = ["saturday", "i think", "i", "think",
+																		"there could be", "could be", "be"];
+				if (attn_check_responses.includes((document.getElementById("p-agree-heard").value).toLowerCase()) == false) {
 					$('.err_1').show();
 				} else if (document.getElementById("practice-A-response").value == "50" || 
 						document.getElementById("practice-B-response").value == "50") {
