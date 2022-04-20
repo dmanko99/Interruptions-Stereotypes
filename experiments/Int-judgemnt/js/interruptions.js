@@ -192,7 +192,7 @@ function make_slides(f) {
 																			exp.practice_B + '" style="width:150px;height:150px;">';
 			var practice_audio = '<audio controls src = "' + exp.practice_clip +
 													'"type = "audio/wav"></audio>';
-			var practice_slider_intro = "How <strong>social</strong> do " + exp.practice_A + " and " + exp.practice_B + " seem?";
+			var practice_slider_intro = "How <strong>supportive</strong> do " + exp.practice_A + " and " + exp.practice_B + " seem?";
 
 
 			//changing text
@@ -202,7 +202,7 @@ function make_slides(f) {
 			document.getElementById('practice-speakerA-pic').innerHTML = practice_interrupter_face;
 			document.getElementById('practice-speakerB-pic').innerHTML = practice_interruptee_face;
 			document.getElementById('practice-clip').innerHTML = practice_audio;
-			document.getElementById('social_intro').innerHTML = practice_slider_intro;
+			document.getElementById('supportive_intro').innerHTML = practice_slider_intro;
 		},
 
 		button : function() {
@@ -232,14 +232,14 @@ function make_slides(f) {
 			var A_explanation;
 			var B_explanation;
 			if (ar > 50) {
-				A_explanation = "You rated " + exp.practice_A + " as being more <i>social</i> than <i>anti-social</i>.";
+				A_explanation = "You rated " + exp.practice_A + " as being more <i>supportive</i> than <i>unsupportive</i>.";
 			} else {
-				A_explanation = "You rated " + exp.practice_A + " as being more <i>anti-social</i> than <i>social</i>.";
+				A_explanation = "You rated " + exp.practice_A + " as being more <i>unsupportive</i> than <i>supportive</i>.";
 			}
 			if (br > 50) {
-				B_explanation = "You rated " + exp.practice_B + " as being more <i>social</i> than <i>anti-social</i>.";
+				B_explanation = "You rated " + exp.practice_B + " as being more <i>supportive</i> than <i>unsupportive</i>.";
 			} else {
-				B_explanation = "You rated " + exp.practice_B + " as being more <i>anti-social</i> than <i>social</i>.";
+				B_explanation = "You rated " + exp.practice_B + " as being more <i>unsupportive</i> than <i>supportive</i>.";
 			}
 			document.getElementById("speakerA-rating").innerHTML = A_explanation;
 			document.getElementById("speakerB-rating").innerHTML = B_explanation;
