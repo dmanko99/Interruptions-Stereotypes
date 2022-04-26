@@ -693,7 +693,7 @@ function make_slides(f) {
 				confused : $('input[name="assess"]:checked').val(),
 				confusion: $("#confusion").val(),
 				confused_prevented : $('input[name="confused"]:checked').val(),
-				age : $("#age").val(),
+				age : $("#age_response").val(),
 				gender : $("#gender").val(),
 				education : $("#education").val(),
 				affiliation : $("#affiliation").val(),
