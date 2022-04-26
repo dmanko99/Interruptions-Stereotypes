@@ -1,0 +1,148 @@
+---
+title: "Interruptions Judgment Analysis"
+output: html_notebook
+---
+
+```{r setup}
+#load packages
+library("tidyverse") # for all things tidyverse
+library("dplyr")
+library("pwr")
+library("lme4")
+library("brms")
+library("lmerTest")
+library("ggplot2")
+library("bootstrap")
+library("tm")
+
+#environment-level changes
+setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+theme_classic()
+
+#Helper scripts
+dodge = position_dodge(.9)
+theta <- function(x, xdata, na.rm=T) {
+  mean(xdata[x],
+       na.rm = na.rm)
+  }
+ci.low <- function(x,na.rm=T) {
+  mean(x, na.rm = na.rm) - 
+    quantile(
+      bootstrap(
+        1:length(x),
+        1000,
+        theta,
+        x,
+        na.rm = na.rm)$thetastar,
+      .025,
+      na.rm = na.rm)
+  }
+ci.high <- function(x,na.rm=T) {
+  quantile(
+    bootstrap(
+      1:length(x),
+      1000,
+      theta,
+      x,
+      na.rm = na.rm)$thetastar,
+    .975,
+    na.rm = na.rm) - mean(x, na.rm = na.rm)
+  }
+```
+
+```{r sanity checks}
+# number of participants, should equal 650
+length(unique(df$workerid))
+# mean completion time
+# mean(read.csv("int-judgment/data/int-judgment/int-judgment-time_in_minutes.csv",
+mean(read.csv("int-judgment/data/int-judgment-pilot/int-judgment-pilot-time_in_minutes.csv",
+              header = TRUE)$time_in_minutes)
+```
+
+
+```{r data reading & wrangling}
+df <- read_csv("int-judgment/data/int-judgment/int-judgment-trials.csv") %>%
+df <- read_csv("int-judgment/data/int-judgment-pilot/int-judgment-pilot-trials.csv") %>%
+  # remove non-relevant columns
+  select( -c(proliferate.condition,
+             slide_number,
+             image,
+             slide_type,
+             error)) %>%
+  # removing bot check slides
+  drop_na()
+df <- df %>% 
+  mutate(PEM_interruptor = mean(as.numeric(c(A_friendly,
+                                             A_agreeable,
+                                             A_engaged))),
+         PEM_interruptee = mean(as.numeric(c(B_friendly,
+                                             B_agreeable,
+                                             B_engaged))),
+         IM = mean(as.numeric(c((100 - as.numeric(B_listened)),
+                                B_feel_int,
+                                A_try_int)))
+         ) %>% 
+  unite("int_race_gender", int_race, int_sex, sep = " ")
+
+##subject information data
+subinfo <- read_csv("int-judgment/data/int-judgment/int-judgment-subject_information.csv",
+                    header = TRUE)
+```
+
+
+```{r basic visualizations}
+# some data wrangling to do first
+# only looking at PEM and IM now
+df_summary <- df %>% 
+  select(c(int_race_gender, int_race, int_sex, A_face, A_name, interruption_style, PEM_interruptor, IM))
+
+df_summary_long <- df_summary %>% 
+    pivot_longer(c(PEM_interruptor, IM),
+                 names_to = "metric",
+                 values_to = "response")
+
+
+summary_plot <- df_summary_long %>% 
+  ggplot(x = metric,
+         y = response,
+         color = int_race_gender) +
+  geom_col()
+```
+
+```{r brms models}
+#simpler ones
+PEM_model_race <- brm(PEM_interruptor ~ int_race + 
+                    (1 | workerid) +
+                    (1 | A_face) +
+                    (1 | A_name))
+summary(PEM_model_race)
+
+PEM_model_gender <- brm(PEM_interruptor ~ int_sex + 
+                    (1 | workerid) +
+                    (1 | A_face) +
+                    (1 | A_name))
+summary(PEM_model_gender)
+
+IM_model_race <- brm(IM ~ int_race + 
+                    (1 | workerid) +
+                    (1 | A_face) +
+                    (1 | A_name))
+summary(IM_model_race)
+
+IM_model_gender <- brm(IM ~ int_sex + 
+                    (1 | workerid) +
+                    (1 | A_face) +
+                    (1 | A_name))
+summary(IM_model_gender)
+
+#looking at interactions
+model_int <- brm(PEM_interruptor ~ int_race * int_sex
+                    (1 | workerid) +
+                    (1 | A_face) +
+                    (1 | A_name))
+
+
+```
+
+
+

@@ -14,10 +14,11 @@ library("bootstrap")
 library("tm")
 
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+theme_classic()
 
 #Read in data
 ##experimental trial data
-df <- read_csv("int_norming/data/int_norming/int_norming-trials.csv") %>%
+df_norming <- read_csv("int_norming/data/int-norming/int-norming-trials.csv") %>%
   # remove non-relevant columns
   select( -c(proliferate.condition,
              slide_number,
@@ -136,13 +137,56 @@ df.white_male <- df_norming %>%
             CILow = ci.low(response),
             CIHigh = ci.high(response))
 
+# visualizing responses
+df_norming %>% 
+  ggplot(aes(x = condition,
+             y = response)) +
+  geom_point(alpha = 0.2,
+             position = position_jitter(width = .1,
+                                        height = 0)) +
+  stat_summary(fun.data = "mean_cl_boot",
+               geom = "pointrange",
+               color = "dark blue",
+               fill = "dark blue",
+               size = 1) +
+  labs(title = "Responses for match/mismatch conditions",
+       x = "Do the Name/Face and Voice Match in Gender?",
+       y = "Likeliohood Response (0-1)") +
+  scale_x_discrete(labels = c("Yes",
+                              "No"))
+
+df_norming %>% 
+  ggplot(aes(x = condition,
+             y = response,
+             color = `race/gender`)) + 
+  geom_point(alpha = 0.2,
+             position = position_jitter(width = .1,
+                                        height = 0),
+             show.legend = FALSE) +
+  facet_grid(race ~ gender) + 
+  stat_summary(fun.data = "mean_cl_boot",
+               geom = "pointrange",
+               color = "dark blue",
+               fill = "dark blue",
+               size = .5) + 
+  labs(title = "Responses for match/mismatch conditions",
+       x = "Do the Name/Face and Voice Match in Gender?",
+       y = "Likeliohood Response (0-1)") +
+  scale_x_discrete(labels = c("Yes",
+                              "No"))
 
 # performing t-tests for aggregate and each race/gender condition
 ## comparing match condition to mismatch condition
-t.test(df.aggregated$avg_response ~ df.aggregated$condition)
-t.test(df.female$avg_response ~ df.white_female$condition)
-t.test(df.black_male$avg_response ~ df.black_male$condition)
-t.test(df.white_male$avg_response ~ df.white_male$condition)
+t.test(df_norming$response ~ df_norming$condition)
+
+t.test(filter(df_norming, race == "black")$response ~ 
+         filter(df_norming, race == "black")$condition)
+
+t.test(filter(df_norming, gender == "male", condition == "match")$response ~ 
+         filter(df_norming, gender == "male", condition == "match")$race)
+
+t.test(filter(df_norming, gender == "female", condition == "match")$response ~ 
+         filter(df_norming, gender == "female", condition == "match")$race)
 
 
 #mixed effects model

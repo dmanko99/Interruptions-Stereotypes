@@ -103,7 +103,7 @@
 		<div class = "slide" id = "eng_check">
 			<h3>Native English Speaker Check</h3>
 			<br>
-			<p>You must be a <b>native speaker of English</b> and be able to <b>listen to a short audio clip</b> in order to participate in this survey. Please click on the button below or press the <b><i>Y</i></b> key to indicate that you meet the following requirements:
+			<p>You must be a <b>native speaker of English</b> and be able to <b>listen to a short audio clip</b> in order to participate in this survey. Please click on the button below <!-- or press the <b><i>Y</i></b> key  -->to indicate that you meet the following requirements:
 			</p>
 			<p><ul align = "left">
 				<li>
@@ -117,13 +117,13 @@
 			<div class = "button" id = "contbutton" onclick = "_s.button()">
 				I meet the above requirements
 			</div>
-			<script>
+<!-- 			<script>
 				$(document).bind("keydown", function(event) {
 					if (event.keyCode == 89) {
 						$("#contbutton").click();
 					}
 				});
-			</script>
+			</script> -->
 		</div>
 
 	<!-- Practice trial -->
@@ -713,7 +713,7 @@
 				</tr>
 			</table>
 		</div>
-		<div id = "open_ended">
+		<div id = "open_ended_response">
 			<p id = "open_ended_prompt">(Optional): Is there anything else you can guess about the speakers or their relationship?</p>
 			<textarea id="open_ended" rows="3" cols="50"></textarea>
 		</div>
