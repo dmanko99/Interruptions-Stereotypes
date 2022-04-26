@@ -56,8 +56,8 @@
 				<p2 style = "color:red">You failed the question and you are disqualified from completing this study.</p2>
 			</div>
 			<br>
-			<div class = "button">
-				<button id = "contbutton" onclick = "_s.button()">Continue</button>
+			<div class = "button" id = "contbutton" onclick = "_s.button()">
+				Continue
 			</div>
 			<script>
 				$("#text_box").keypress(function(event) {
@@ -82,7 +82,9 @@
 				Your participation will take approximately 6 minutes.
 			</p>
 
-			<button id="start_button" type="button">Start Experiment</button>
+			<div class = "button" id="start_button" type="button">
+				Start Experiment
+			</div>
 
 			<br><br><br>
 			<p id = "instruct-text" align = "left"><i><small><small>
@@ -112,8 +114,8 @@
 				</li>
 			</ul></p>
 			<br><br>
-			<div class = "button">
-				<button id = "contbutton" onclick = "_s.button()">I meet the above requirements</button>
+			<div class = "button" id = "contbutton" onclick = "_s.button()">
+				I meet the above requirements
 			</div>
 			<script>
 				$(document).bind("keydown", function(event) {
@@ -177,8 +179,8 @@
 					</table>
 				</div>
 
-				<div class = "button">
-					<button id = "proceedbutton" onclick = "_s.button()">Proceed</button>
+				<div class = "button" id = "proceedbutton" onclick = "_s.button()">
+					Proceed
 				</div>
 
 				<br>
@@ -198,8 +200,8 @@
 					With that practice out of the way, you're ready for the actual study! Press the button below to continue.
 				</p>
 				<br>
-				<div class = "button">
-					<button id = "proceedbutton" onclick = "_s.button()">Continue to actual study</button>
+				<div class = "button" id = "proceedbutton" onclick = "_s.button()">
+					Continue to actual study
 				</div>
 				<br>
 			</div>
@@ -279,8 +281,8 @@
 				</div>
 				<br><br>
 
-				<div class = "button">
-					<button id = "proceedbutton" onclick = "_s.button()">Proceed</button>
+				<div class = "button" id = "proceedbutton" onclick = "_s.button()">
+					Proceed
 				</div>
 
 				<br>
@@ -312,23 +314,29 @@
 			<p id = "age_intro"></p>
 			<table id = "age_sliders" class = "slider_table" align = "center">
 				<tr>
-					<td class = "left">0 years old</td>
-					<td class = "center"></td>
-					<td class = "right">80 years old</td>
+					<td align = "center">0</td>
+					<td align = "center">10</td>
+					<td align = "center">20</td>
+					<td align = "center">30</td>
+					<td align = "center">40</td>
+					<td align = "center">50</td>
+					<td align = "center">60</td>
+					<td align = "center">70</td>
+					<td align = "center">80</td>
 				</tr>
 				<tr>
-					<td colspan = "3"><p id = "speakerA_name" align = "left"></p></td>
+					<td colspan = "9"><p id = "speakerA_name" align = "left"></p></td>
 				</tr>
 				<tr>
-					<td colspan = "3">
+					<td colspan = "9">
 						<input type="range" name="A_age" id="A_age" min = "0" max = "80" class = "slider"></input>
 					</td>
 				</tr>
 				<tr>
-					<td colspan = "3"><p id = "speakerB_name" align = "left"></p></td>
+					<td colspan = "9"><p id = "speakerB_name" align = "left"></p></td>
 				</tr>
 				<tr>
-					<td colspan = "3">
+					<td colspan = "9">
 						<input type="range" name="B_age" id="B_age" min = "0" max = "80" class = "slider"></input>
 					</td>
 				</tr>
@@ -465,8 +473,8 @@
 			</table>
 		</div>
 
-		<div class = "button">
-			<button id = "proceedbutton" onclick = "_s.button()">Proceed</button>
+		<div class = "button" id = "proceedbutton" onclick = "_s.button()">
+			Proceed
 		</div>
 
 		<p class="err" style="color:red">Please adjust all the sliders before continuing.</div>
@@ -574,8 +582,8 @@
 			</table>
 		</div>
 
-		<div class = "button">
-			<button id = "proceedbutton" onclick = "_s.button()">Proceed</button>
+		<div class = "button" id = "proceedbutton" onclick = "_s.button()">
+			Proceed
 		</div>
 
 		<p class="err" style="color:red">Please adjust all the sliders before continuing.</div>
@@ -710,8 +718,8 @@
 			<textarea id="open_ended" rows="3" cols="50"></textarea>
 		</div>
 
-		<div class = "button">
-			<button id = "proceedbutton" onclick = "_s.button()">Proceed</button>
+		<div class = "button" id = "proceedbutton" onclick = "_s.button()">
+			Proceed
 		</div>
 
 		<p class="err" style="color:red">Please adjust all the sliders before continuing.</div>
@@ -884,8 +892,8 @@
 				</tr>
 			</table>
 			<br>
-			<div class = "button">
-				<button id = "proceedbutton" onclick = "_s.button()">Finish!</button>
+			<div class = "button" id = "proceedbutton" onclick = "_s.button()">
+				Finish!
 			</div>
 			<br>
 		</div>
@@ -901,16 +909,22 @@
 				<p>Native Language: <input type="text" id="language"/></p>
 				<label>(the language(s) spoken at home when you were a child)</label>
 
-				<p>Did you read the instructions and do you think you did the study correctly?</p></br>
+				<p>Were you confused by anything in the study?</p>
 				<label><input type="radio"  name="assess" value="No"/>No</label>
 				<label><input type="radio"  name="assess" value="Yes"/>Yes</label>
-				<label><input type="radio"  name="assess" value="Confused"/>I was confused</label>
+				<p>If you were confused during the study, do you think this prevented you from completing the tasks?</p>
+				<label><input type="radio"  name="confused" value="No"/>No</label>
+				<label><input type="radio"  name="confused" value="Yes"/>Yes</label>
+				<label><input type="radio"  name="confused" value=""/>N/A</label>
+				<p>If you were confused, what were you confused about?</p>
+				<textarea id="confusion" rows="2" cols="50"></textarea>
 
 				<p>Were there any problems or bugs in the experiment?</p>
 				<textarea id="problems" rows="2" cols="50"></textarea>
 
-				<p>What do you think is a fair price for the work you did?</p>
-				<textarea id="fairprice" rows="1" cols="10"></textarea>
+				<p>What do you think is a fair price for the work you did?
+					<input type = "text" id="fairprice"/>
+				</p>
 
 				<p>Gender:
 					<select id="gender">
@@ -927,13 +941,13 @@
 					<ul style="list-style-type:none;" style="display: inline-block;" align="center">  
 						<li><label><input name="raceX" type="checkbox" id="Asian"  
 							value="Asian"/>Asian</label></li>
-							<li><label><input name="raceX" type="checkbox" id="AA" value="AA"/> 
+						<li><label><input name="raceX" type="checkbox" id="AA" value="AA"/> 
 							Black or African American</label></li>
-							<li><label><input name="raceX" type="checkbox" id="Latino" value="Latino"/>
+						<li><label><input name="raceX" type="checkbox" id="Latino" value="Latino"/>
 							Hispanic or Latino</label></li>
-							<li><label><input name="raceX" type="checkbox" id="PI" value="PI"/>
+						<li><label><input name="raceX" type="checkbox" id="PI" value="PI"/>
 							Native Hawaiian or Other Pacific Islander </label></li>
-							<li><label><input name="raceX" type="checkbox" id="White" value="White"/>
+						<li><label><input name="raceX" type="checkbox" id="White" value="White"/>
 							White</label>
 						</li>
 					</ul>
@@ -942,11 +956,12 @@
 				<p>Level Of Education:
 					<select id="education">
 						<label><option value="-1"/></label>
-						<label><option value="0"/>Some High School</label>
-						<label><option value="1"/>Graduated High School</label>
-						<label><option value="2"/>Some College</label>
-						<label><option value="3"/>Graduated College</label>
-						<label><option value="4"/>Hold a higher degree</label>
+						<label><option value="0"/>Did not complete high school</label>
+						<label><option value="1"/>Some high school</label>
+						<label><option value="2"/>Graduated high school</label>
+						<label><option value="3"/>Some college</label>
+						<label><option value="4"/>Graduated college</label>
+						<label><option value="5"/>Hold a higher degree</label>
 					</select>
 				</p>
 
@@ -960,6 +975,7 @@
 					<label><option value="4"/>Moderate Republican</label>
 					<label><option value="5"/>Republican-leaning Independent</label>
 					<label><option value="6"/>Conservative Republican (most conservative)</label>
+					<label><option value="-1"/>Other/Prefer not to answer</label>
 				</select>
 
 				<p>Did you enjoy the study?</p>
@@ -975,7 +991,9 @@
 
 				<br><br>
 
-				<button onclick="_s.submit()">Submit</button>
+				<div class = "button" onclick="_s.submit()">
+					Submit
+				</div>
 
 			</div>
 		</div>

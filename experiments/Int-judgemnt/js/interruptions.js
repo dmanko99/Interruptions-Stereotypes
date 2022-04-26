@@ -52,10 +52,8 @@
 			clip = _.sample(f_interruptive_clips);
 		}
 	}
-	
-	//selecting face pictures and tracking stim race for interruptor
 
-	
+	//selecting face pictures and tracking stim race for interruptor
 
 
 	//selecting names — relevant when race of interruptee is manipulated
@@ -124,6 +122,7 @@ function make_slides(f) {
 				// 	"audio" : "",
 				// 	"response" : [0,exp.text_input]
 				// });
+				window.scrollTo(0,0);
 				exp.go();
 			}
 			//incorrect answer
@@ -154,6 +153,7 @@ function make_slides(f) {
 	slides.info = slide({
 		name : "info",
 		start : function() {
+			window.scrollTo(0,0);
 			exp.startT = Date.now();
 		}
 	});
@@ -162,6 +162,7 @@ function make_slides(f) {
 	slides.eng_check = slide({
 		name : "eng_check",
 		button : function() {
+			window.scrollTo(0,0);
 			exp.go();
 		}
 	});
@@ -224,6 +225,7 @@ function make_slides(f) {
 					$('.practice-2').show();
 				}
 			} else { //on page 2
+				window.scrollTo(0,0);
 				exp.go();
 			}
 		},
@@ -286,6 +288,7 @@ function make_slides(f) {
 		button : function () {
 			if (document.getElementById("agree-heard").checked) {
 				this.log_responses();
+				window.scrollTo(0,0);
 				exp.go();
 			} else {
 				$('.err').show();
@@ -336,7 +339,8 @@ function make_slides(f) {
 											 '"type = "audio/wav"></audio>';
 
 			
-			var age_intro = "How old do you think " + speakerA + " and " + speakerB + " are?";
+			var age_intro = "How old do you think " + speakerA + " and " + speakerB + " are?" +
+											"<br><small>This scale goes from 0 to 80 years old.</small>";
 			var friendly_intro = "How <strong>friendly</strong> do " + speakerA + " and " + speakerB + " seem?";
 			var conf_intro = "How <strong>confident</strong> do " + speakerA + " and " + speakerB + " seem?";
 			var smart_intro = "How <strong>intelligent</strong> do " + speakerA + " and " + speakerB + " seem?";
@@ -389,6 +393,7 @@ function make_slides(f) {
 			} else {
 				//record basic data
 				this.log_responses();
+				window.scrollTo(0,0);
 				exp.go();
 			}
 		},
@@ -481,6 +486,7 @@ function make_slides(f) {
 			} else {
 				//record basic data
 				this.log_responses();
+				window.scrollTo(0,0);
 				exp.go();
 			}
 		},
@@ -574,6 +580,7 @@ function make_slides(f) {
 			} else {
 				//record basic data
 				this.log_responses();
+				window.scrollTo(0,0);
 				exp.go();
 			}
 		},
@@ -637,6 +644,7 @@ function make_slides(f) {
 
 			} else {
 				this.log_responses();
+				window.scrollTo(0,0);
 				exp.go();
 			 }
 		},
@@ -682,7 +690,9 @@ function make_slides(f) {
 			exp.subj_data = {
 				language : $("#language").val(),
 				enjoyment : $("#enjoyment").val(),
-				asses : $('input[name="assess"]:checked').val(),
+				confused : $('input[name="assess"]:checked').val(),
+				confusion: $("#confusion").val(),
+				confused_prevented : $('input[name="confused"]:checked').val(),
 				age : $("#age").val(),
 				gender : $("#gender").val(),
 				education : $("#education").val(),
@@ -692,6 +702,7 @@ function make_slides(f) {
 				problems: $("#problems").val(),
 				fairprice: $("#fairprice").val()
 			};
+			window.scrollTo(0,0);
 			exp.go();
 		}
 	});
@@ -791,6 +802,7 @@ function init() {
 
 	//making sure workers have accepted the experiment
 	$("#start_button").click(function() {
+		window.scrollTo(0,0);
 		exp.go();
 	});
 
