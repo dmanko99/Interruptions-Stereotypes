@@ -1,7 +1,11 @@
 ---
 title: "Interruptions Judgment Analysis"
-output: html_notebook
+output:
 ---
+```{r pre-setup}
+setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+```
+
 
 ```{r setup}
 #load packages
@@ -16,7 +20,6 @@ library("bootstrap")
 library("tm")
 
 #environment-level changes
-setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 theme_classic()
 
 #Helper scripts
@@ -52,61 +55,104 @@ ci.high <- function(x,na.rm=T) {
 
 ```{r sanity checks}
 # number of participants, should equal 650
-length(unique(df$workerid))
-# mean completion time
+length(unique(read.csv("int-judgment/data/int-judgment/int-judgment-workerids.csv",
+              header = TRUE)$workerid))
+# mean completion time, should be around 6 mins
 # mean(read.csv("int-judgment/data/int-judgment/int-judgment-time_in_minutes.csv",
-mean(read.csv("int-judgment/data/int-judgment-pilot/int-judgment-pilot-time_in_minutes.csv",
+mean(read.csv("int-judgment/data/int-main-pilot/int-main-pilot-time_in_minutes.csv",
               header = TRUE)$time_in_minutes)
 ```
 
 
 ```{r data reading & wrangling}
-df <- read_csv("int-judgment/data/int-judgment/int-judgment-trials.csv") %>%
-df <- read_csv("int-judgment/data/int-judgment-pilot/int-judgment-pilot-trials.csv") %>%
+# df <- read_csv("int-judgment/data/int-judgment/int-judgment-trials.csv") %>%
+df <- read_csv("int-judgment/data/int-main-pilot/int-main-pilot-trials.csv") %>%
   # remove non-relevant columns
   select( -c(proliferate.condition,
-             slide_number,
-             image,
-             slide_type,
-             error)) %>%
-  # removing bot check slides
-  drop_na()
+             error))
 df <- df %>% 
-  mutate(PEM_interruptor = mean(as.numeric(c(A_friendly,
-                                             A_agreeable,
-                                             A_engaged))),
-         PEM_interruptee = mean(as.numeric(c(B_friendly,
-                                             B_agreeable,
-                                             B_engaged))),
-         IM = mean(as.numeric(c((100 - as.numeric(B_listened)),
-                                B_feel_int,
-                                A_try_int)))
+  mutate(PEM_interruptor = (A_friendly + A_agree + A_engaged) / 3,
+         PEM_interruptee = (B_friendly + B_agree + B_engaged) / 3,
+         IM = ((100 - B_listened) + B_feel_int + A_try_int) / 3,
+         A_face = sub('stims\\/face_stims\\/[wb][mf]faces\\/',
+                       '', A_face),
+         B_face = sub('stims\\/face_stims\\/[wb][mf]faces\\/',
+                       '', B_face)
          ) %>% 
-  unite("int_race_gender", int_race, int_sex, sep = " ")
+  unite("int_race_gender", int_race, int_sex, sep = " ", remove = FALSE)
 
 ##subject information data
-subinfo <- read_csv("int-judgment/data/int-judgment/int-judgment-subject_information.csv",
-                    header = TRUE)
+# subinfo <- read_csv("int-judgment/data/int-judgment/int-judgment-subjet_information.csv",
+subinfo <- read_csv("int-judgment/data/int-main-pilot/int-main-pilot-subjet_information.csv")
 ```
 
 
 ```{r basic visualizations}
 # some data wrangling to do first
 # only looking at PEM and IM now
-df_summary <- df %>% 
-  select(c(int_race_gender, int_race, int_sex, A_face, A_name, interruption_style, PEM_interruptor, IM))
+df_pared <- df %>% 
+  select(c(int_race_gender, int_race, int_sex, A_face, speaker_A, interruption_style, PEM_interruptor, IM))
 
-df_summary_long <- df_summary %>% 
+df_pared_long <- df_pared %>% 
     pivot_longer(c(PEM_interruptor, IM),
                  names_to = "metric",
                  values_to = "response")
 
+df_pared_summary <- df_pared %>% 
+  group_by(int_race_gender, interruption_style) %>% 
+  summarize(PEM_avg = mean(PEM_interruptor),
+            PEM_CILow = ci.low(PEM_interruptor),
+            PEM_CIHigh = ci.high(PEM_interruptor),
+            IM_avg = mean(IM),
+            IM_CILow = ci.low(IM),
+            IM_CIHigh = ci.high(IM)) %>% 
+  ungroup() %>% 
+  mutate(PEM_min = PEM_avg - PEM_CILow,
+         PEM_max = PEM_avg + PEM_CIHigh,
+         IM_min = IM_avg - IM_CILow,
+         IM_max = IM_avg + IM_CIHigh) %>% 
+  select(-c(PEM_CILow,
+            PEM_CIHigh,
+            IM_CILow,
+            IM_CIHigh)) %>% 
+  pivot_longer(c(PEM_avg,
+                 IM_avg),
+               names_to = "metric",
+               values_to = "response") %>% 
+  mutate(lower_bound = if_else(metric == "PEM_avg",
+                               PEM_min,
+                               IM_min),
+         upper_bound = if_else(metric == "PEM_avg",
+                               PEM_max,
+                               IM_max),
+         metric = recode(as.factor(metric),
+                         "PEM_avg" = "PEM",
+                         "IM_avg" = "IM")) %>% 
+  select(-c(PEM_max, PEM_min, IM_max, IM_min))
+  
 
-summary_plot <- df_summary_long %>% 
-  ggplot(x = metric,
+
+
+summary_plot <- df_pared_long %>% 
+  ggplot(aes(x = metric,
          y = response,
-         color = int_race_gender) +
-  geom_col()
+         fill = int_race_gender)) +
+  facet_wrap(~ interruption_style) +
+  geom_bar(stat = "identity", position = "dodge")
+summary_plot
+
+error_bars_plot <- df_pared_summary %>% 
+  ggplot(aes(x = metric,
+         y = response,
+         fill = int_race_gender)) +
+  facet_wrap(~ interruption_style) +
+  geom_bar(stat = "identity",
+           position = position_dodge(0.9)) +
+  geom_errorbar(aes(ymin = lower_bound,
+                    ymax = upper_bound),
+                width = 0.25,
+                position = position_dodge(0.9))
+error_bars_plot
 ```
 
 ```{r brms models}
