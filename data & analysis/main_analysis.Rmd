@@ -3,11 +3,12 @@ title: "Interruptions Judgment Analysis"
 output:
 ---
 ```{r pre-setup}
+# setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 ```
 
 
-```{r setup}
+```{r setup echo = FALSE message = FALSE}
 #load packages
 library("tidyverse") # for all things tidyverse
 library("dplyr")
@@ -18,9 +19,22 @@ library("lmerTest")
 library("ggplot2")
 library("bootstrap")
 library("tm")
+library("rstudioapi")
+library("RColorBrewer")
+library("tools")
 
-#environment-level changes
-theme_classic()
+
+#setting the theme for ggplots
+# theme_DM_presentation <- function(base_size = 2.5) {
+#   #generate the colours for the chart procedurally with RColorBrewer
+#   palette <- brewer.pal("Reds")
+# }
+# 
+# theme_DM_paper <- function(base_size = 2.5) {
+#   
+# }
+# theme_classic()
+theme_bw()
 
 #Helper scripts
 dodge = position_dodge(.9)
@@ -37,7 +51,7 @@ ci.low <- function(x,na.rm=T) {
         theta,
         x,
         na.rm = na.rm)$thetastar,
-      .025,
+      .05,
       na.rm = na.rm)
   }
 ci.high <- function(x,na.rm=T) {
@@ -48,7 +62,7 @@ ci.high <- function(x,na.rm=T) {
       theta,
       x,
       na.rm = na.rm)$thetastar,
-    .975,
+    .95,
     na.rm = na.rm) - mean(x, na.rm = na.rm)
   }
 ```
@@ -57,16 +71,16 @@ ci.high <- function(x,na.rm=T) {
 # number of participants, should equal 650
 length(unique(read.csv("int-judgment/data/int-judgment/int-judgment-workerids.csv",
               header = TRUE)$workerid))
-# mean completion time, should be around 6 mins
-# mean(read.csv("int-judgment/data/int-judgment/int-judgment-time_in_minutes.csv",
-mean(read.csv("int-judgment/data/int-main-pilot/int-main-pilot-time_in_minutes.csv",
-              header = TRUE)$time_in_minutes)
+# mean completion time, should be around 6-8 mins
+comp_times <- read.csv("int-judgment/data/int-judgment/int-judgment-time_in_minutes.csv",
+                       header = TRUE)$time_in_minutes
+median(comp_times)
 ```
 
 
 ```{r data reading & wrangling}
-# df <- read_csv("int-judgment/data/int-judgment/int-judgment-trials.csv") %>%
-df <- read_csv("int-judgment/data/int-main-pilot/int-main-pilot-trials.csv") %>%
+df <- read_csv("int-judgment/data/int-judgment/int-judgment-trials.csv") %>%
+# df <- read_csv("int-judgment/data/int-main-pilot/int-main-pilot-trials.csv") %>%
   # remove non-relevant columns
   select( -c(proliferate.condition,
              error))
@@ -82,16 +96,45 @@ df <- df %>%
   unite("int_race_gender", int_race, int_sex, sep = " ", remove = FALSE)
 
 ##subject information data
-# subinfo <- read_csv("int-judgment/data/int-judgment/int-judgment-subjet_information.csv",
-subinfo <- read_csv("int-judgment/data/int-main-pilot/int-main-pilot-subjet_information.csv")
+subinfo <- read_csv("int-judgment/data/int-judgment/int-judgment-subjet_information.csv")
+# subinfo <- read_csv("int-judgment/data/int-main-pilot/int-main-pilot-subjet_information.csv")
+```
+```{r exclusion criteria}
+# calculating completion time standard deviation
+sd_comp_times <- sd(comp_times)
+
+# finding participants outside of 4 SDs away from  mean
+IDs_too_slow <- filter(read.csv("int-judgment/data/int-judgment/int-judgment-time_in_minutes.csv",
+                       header = TRUE),
+                      time_in_minutes > mean(comp_times) + 5*sd_comp_times)$workerid
+IDs_too_fast <- filter(read.csv("int-judgment/data/int-judgment/int-judgment-time_in_minutes.csv",
+                       header = TRUE),
+                      time_in_minutes < mean(comp_times) - 5*sd_comp_times)$workerid
+IDs_exc <- append(IDs_too_slow, IDs_too_fast)
+
+df <- df %>% 
+  filter(workerid %in% IDs_exc == FALSE)
 ```
 
 
-```{r basic visualizations}
-# some data wrangling to do first
-# only looking at PEM and IM now
+```{r PEM and IM datasets}
+#some data wrangling to do first
+
+#center variables
+df <- df %>% 
+  mutate(across(
+    # int_race_ctr = as.numeric(int_race) - mean(as.numeric(int_race)),
+    # int_sex_ctr = as.numeric(int_sex) - mean(as.numeric(int_sex)),
+    # PEM_ctr = as.numeric(PEM_interruptor) - mean(as.numeric(PEM_interruptor)),
+    .cols = c(int_race, int_sex, interruption_style),
+    .fns = ~ scale(as.numeric(factor(.x)),
+                   scale = FALSE),
+    .names = "ctr_{.col}"
+  ))
+
+# for "pared-down" summaries looking at PEM and IM
 df_pared <- df %>% 
-  select(c(int_race_gender, int_race, int_sex, A_face, speaker_A, interruption_style, PEM_interruptor, IM))
+  select(c(int_race_gender, int_race, ctr_int_race, int_sex, ctr_int_sex, A_face, speaker_A, interruption_style, ctr_interruption_style, PEM_interruptor, IM))
 
 df_pared_long <- df_pared %>% 
     pivot_longer(c(PEM_interruptor, IM),
@@ -129,66 +172,1726 @@ df_pared_summary <- df_pared %>%
                          "PEM_avg" = "PEM",
                          "IM_avg" = "IM")) %>% 
   select(-c(PEM_max, PEM_min, IM_max, IM_min))
-  
 
+#additional ones looking at PEM,IM, aggression, and intelligence
+df_pared_all4 <- df %>% 
+  select(c(int_race_gender, int_race, ctr_int_race, int_sex, ctr_int_sex, A_face, speaker_A, interruption_style, ctr_interruption_style, PEM_interruptor, IM, A_aggresive, A_int))
 
+df_pared_summary_all4 <- df_pared_all4 %>% 
+  group_by(int_race_gender, interruption_style) %>% 
+  summarize(across(.cols = c(PEM_interruptor, IM, A_aggressive, A_int),
+                   .fns = mean,
+                   .names = "{.col}_avg"),
+            across(.cols = c(PEM_interruptor, IM, A_aggressive, A_int),
+                   .fns = ci.low,
+                   .names = "{.col}_CILow"),
+            across(.cols = c(PEM_interruptor, IM, A_aggressive, A_int),
+                   .fns = ci.high,
+                   .names = "{.col}_CIHigh")
+  ) %>%
+  ungroup() %>% 
+  mutate(PEM_min = PEM_interruptor_avg - PEM_interruptor_CILow,
+         PEM_max = PEM_interruptor_avg + PEM_interruptor_CIHigh,
+         IM_min = IM_avg - IM_CILow,
+         IM_max = IM_avg + IM_CIHigh,
+         Aggression_min = A_aggressive_avg - A_aggressive_CILow,
+         Aggression_max = A_aggressive_avg + A_aggressive_CIHigh,
+         Intelligence_min = A_int_avg - A_int_CILow,
+         Intelligence_max = A_int_avg + A_int_CIHigh) %>%
+  select(!matches("_CILow|_CIHigh")) %>% 
+  pivot_longer(c(PEM_interruptor_avg,
+                 IM_avg,
+                 A_aggressive_avg,
+                 A_int_avg),
+               names_to = "metric",
+               values_to = "response") %>% 
+  mutate(lower_bound = case_when(metric == "PEM_interruptor_avg" ~ PEM_min,
+                                 metric == "IM_avg" ~ IM_min,
+                                 metric == "A_aggressive_avg" ~ Aggression_min,
+                                 TRUE ~ Intelligence_min),
+         upper_bound = case_when(metric == "PEM_interruptor_avg" ~ PEM_max,
+                                 metric == "IM_avg" ~ IM_max,
+                                 metric == "A_aggressive_avg" ~ Aggression_max,
+                                 TRUE ~ Intelligence_max),
+         metric = recode(as.factor(metric),
+                         "PEM_interruptor_avg" = "PEM",
+                         "IM_avg" = "IM",
+                         "A_aggressive_avg" = "Aggression",
+                         "A_int_avg" = "Intelligence")) %>% 
+  select(!matches("_max|_min"))
 
-summary_plot <- df_pared_long %>% 
+```  
+
+```{r "summary" visualizations}
+
+# summary_plot - just PEM and IM
+summary_plot <- df_pared_summary %>% 
   ggplot(aes(x = metric,
          y = response,
          fill = int_race_gender)) +
-  facet_wrap(~ interruption_style) +
-  geom_bar(stat = "identity", position = "dodge")
-summary_plot
-
-error_bars_plot <- df_pared_summary %>% 
-  ggplot(aes(x = metric,
-         y = response,
-         fill = int_race_gender)) +
-  facet_wrap(~ interruption_style) +
+  facet_wrap(~ toTitleCase(interruption_style)) +
   geom_bar(stat = "identity",
            position = position_dodge(0.9)) +
   geom_errorbar(aes(ymin = lower_bound,
                     ymax = upper_bound),
-                width = 0.25,
-                position = position_dodge(0.9))
-error_bars_plot
+                width = 0.75,
+                position = position_dodge(0.9)) +
+  theme_bw() +
+  scale_fill_brewer(palette = "RdGy") + 
+  labs(x = "Metric",
+       y = "Rating (0-100)",
+       title = "Judged Interruptiveness and Prosociality",
+       fill = "Interruptor race/gender") +
+  scale_x_discrete(labels = c("Interruptiveness", "Prosocial Engagement")) + 
+  theme(title = element_text(size=18),
+        legend.text = element_text(size=15),
+        axis.text = element_text(angle = 0, size = 12),
+        strip.text = element_text(size=12))
+summary_plot
+
+summary_plot_all4 <- df_pared_summary %>% 
+  ggplot(aes(x = metric,
+         y = response,
+         fill = int_race_gender)) +
+  facet_wrap(~ toTitleCase(interruption_style)) +
+  geom_bar(stat = "identity",
+           position = position_dodge(0.9)) +
+  geom_errorbar(aes(ymin = lower_bound,
+                    ymax = upper_bound),
+                width = 0.75,
+                position = position_dodge(0.9)) +
+  theme_bw() +
+  scale_fill_brewer(palette = "RdGy") + 
+  labs(x = "Metric",
+       y = "Rating (0-100)",
+       title = "Judged Interruptiveness and Prosociality",
+       fill = "Interruptor race/gender") +
+  scale_x_discrete(labels = c("Interruptiveness", "Prosocial Engagement")) + 
+  theme(title = element_text(size=18),
+        legend.text = element_text(size=15),
+        axis.text = element_text(angle = 0, size = 12),
+        strip.text = element_text(size=12))
+summary_plot_all4
+```
+
+```{r looking at stereotype-relevant categories}
+#creating this kind of "penalization" focus, focusing on PEM, IM, aggression, intelligence
+df_penalized <- df %>% 
+  select(c(int_race_gender, interruption_style,
+           PEM_interruptor, IM, A_aggressive, A_int)) %>% 
+  group_by(int_race_gender,
+           interruption_style) %>% 
+  summarize(across(.cols = c(PEM_interruptor, IM, A_aggressive, A_int),
+                   .fns = mean,
+                   .names = "{.col}_avg"),
+            across(.cols = c(PEM_interruptor, IM, A_aggressive, A_int),
+                   .fns = ci.low,
+                   .names = "{.col}_CILow"),
+            across(.cols = c(PEM_interruptor, IM, A_aggressive, A_int),
+                   .fns = ci.high,
+                   .names = "{.col}_CIHigh")
+            ) %>% 
+  ungroup() %>% 
+  pivot_wider(names_from = interruption_style,
+              values_from = -c(int_race_gender, interruption_style)) %>% 
+  mutate(PEM = PEM_interruptor_avg_interruptive - PEM_interruptor_avg_agreeable,
+         PEM_CILow = mean(c(PEM_interruptor_CILow_agreeable,
+                            PEM_interruptor_CILow_interruptive)),
+         PEM_CIHigh = mean(c(PEM_interruptor_CIHigh_agreeable,
+                             PEM_interruptor_CIHigh_interruptive)),
+         IM = IM_avg_interruptive - IM_avg_agreeable, 
+         IM_CILow = mean(c(IM_CILow_agreeable,
+                            IM_CILow_interruptive)),
+         IM_CIHigh = mean(c(IM_CIHigh_agreeable,
+                             IM_CIHigh_interruptive)),
+         Aggressiveness = A_aggressive_avg_interruptive - A_aggressive_avg_agreeable, 
+         aggression_CILow = mean(c(A_aggressive_CILow_agreeable,
+                            A_aggressive_CILow_interruptive)),
+         aggression_CIHigh = mean(c(A_aggressive_CIHigh_agreeable,
+                             A_aggressive_CIHigh_interruptive)),
+         Intelligence = A_int_avg_interruptive - A_int_avg_agreeable, 
+         int_CILow = mean(c(A_int_CILow_agreeable,
+                            A_int_CILow_interruptive)),
+         int_CIHigh = mean(c(A_int_CIHigh_agreeable,
+                             A_int_CIHigh_interruptive))) %>% 
+  select(c(int_race_gender,
+           PEM, PEM_CILow, PEM_CIHigh,
+           IM, IM_CILow, IM_CIHigh,
+           Aggressiveness, aggression_CILow, aggression_CIHigh,
+           Intelligence, int_CILow, int_CIHigh
+           )) %>% 
+  mutate(
+         PEM_min = PEM - PEM_CILow,
+         PEM_max = PEM + PEM_CIHigh,
+         IM_min = IM - IM_CILow,
+         IM_max = IM + IM_CIHigh,
+         aggressiveness_min = Aggressiveness - aggression_CILow,
+         aggressiveness_max = Aggressiveness + aggression_CIHigh,
+         int_min = Intelligence - int_CILow,
+         int_max = Intelligence + int_CIHigh) %>% 
+  select(!matches("CILow|CIHigh")) %>% 
+  pivot_longer(c(PEM, IM, Aggressiveness, Intelligence),
+               names_to = "Trait",
+               values_to = "Response") %>% 
+  mutate(
+    lower_bound = case_when(
+      Trait == "PEM" ~ PEM_min,
+      Trait == "IM" ~ IM_min,
+      Trait == "Aggressiveness" ~ aggressiveness_min,
+      Trait == "Intelligence" ~ int_min),
+    upper_bound = case_when(
+      Trait == "PEM" ~ PEM_max,
+      Trait == "IM" ~ IM_max,
+      Trait == "Aggressiveness" ~ aggressiveness_max,
+      Trait == "Intelligence" ~ int_max)
+  ) %>% 
+  select(!matches("_min|_max"))
+
+##now looking at just race (across genders)
+df_penalized_race <- df %>% 
+  select(c(int_race, interruption_style,
+           PEM_interruptor, IM, A_aggressive, A_int)) %>% 
+  group_by(int_race,
+           interruption_style) %>% 
+  summarize(across(.cols = c(PEM_interruptor, IM, A_aggressive, A_int),
+                   .fns = mean,
+                   .names = "{.col}_avg"),
+            across(.cols = c(PEM_interruptor, IM, A_aggressive, A_int),
+                   .fns = ci.low,
+                   .names = "{.col}_CILow"),
+            across(.cols = c(PEM_interruptor, IM, A_aggressive, A_int),
+                   .fns = ci.high,
+                   .names = "{.col}_CIHigh")
+            ) %>% 
+  ungroup() %>% 
+  pivot_wider(names_from = interruption_style,
+              values_from = -c(int_race, interruption_style)) %>% 
+  mutate(PEM = PEM_interruptor_avg_interruptive - PEM_interruptor_avg_agreeable,
+         PEM_CILow = mean(c(PEM_interruptor_CILow_agreeable,
+                            PEM_interruptor_CILow_interruptive)),
+         PEM_CIHigh = mean(c(PEM_interruptor_CIHigh_agreeable,
+                             PEM_interruptor_CIHigh_interruptive)),
+         IM = IM_avg_interruptive - IM_avg_agreeable, 
+         IM_CILow = mean(c(IM_CILow_agreeable,
+                            IM_CILow_interruptive)),
+         IM_CIHigh = mean(c(IM_CIHigh_agreeable,
+                             IM_CIHigh_interruptive)),
+         Aggressiveness = A_aggressive_avg_interruptive - A_aggressive_avg_agreeable, 
+         aggression_CILow = mean(c(A_aggressive_CILow_agreeable,
+                            A_aggressive_CILow_interruptive)),
+         aggression_CIHigh = mean(c(A_aggressive_CIHigh_agreeable,
+                             A_aggressive_CIHigh_interruptive)),
+         Intelligence = A_int_avg_interruptive - A_int_avg_agreeable, 
+         int_CILow = mean(c(A_int_CILow_agreeable,
+                            A_int_CILow_interruptive)),
+         int_CIHigh = mean(c(A_int_CIHigh_agreeable,
+                             A_int_CIHigh_interruptive))) %>% 
+  select(c(int_race,
+           PEM, PEM_CILow, PEM_CIHigh,
+           IM, IM_CILow, IM_CIHigh,
+           Aggressiveness, aggression_CILow, aggression_CIHigh,
+           Intelligence, int_CILow, int_CIHigh
+           )) %>% 
+  mutate(
+         PEM_min = PEM - PEM_CILow,
+         PEM_max = PEM + PEM_CIHigh,
+         IM_min = IM - IM_CILow,
+         IM_max = IM + IM_CIHigh,
+         aggressiveness_min = Aggressiveness - aggression_CILow,
+         aggressiveness_max = Aggressiveness + aggression_CIHigh,
+         int_min = Intelligence - int_CILow,
+         int_max = Intelligence + int_CIHigh) %>% 
+  select(!matches("CILow|CIHigh")) %>% 
+  pivot_longer(c(PEM, IM, Aggressiveness, Intelligence),
+               names_to = "Trait",
+               values_to = "Response") %>% 
+  mutate(
+    lower_bound = case_when(
+      Trait == "PEM" ~ PEM_min,
+      Trait == "IM" ~ IM_min,
+      Trait == "Aggressiveness" ~ aggressiveness_min,
+      Trait == "Intelligence" ~ int_min),
+    upper_bound = case_when(
+      Trait == "PEM" ~ PEM_max,
+      Trait == "IM" ~ IM_max,
+      Trait == "Aggressiveness" ~ aggressiveness_max,
+      Trait == "Intelligence" ~ int_max)
+  ) %>% 
+  select(!matches("_min|_max"))
+
+##now looking at just gender (across races)
+df_penalized_gender <- df %>% 
+  select(c(int_sex, interruption_style,
+           PEM_interruptor, IM, A_aggressive, A_int)) %>% 
+  group_by(int_sex,
+           interruption_style) %>% 
+  summarize(across(.cols = c(PEM_interruptor, IM, A_aggressive, A_int),
+                   .fns = mean,
+                   .names = "{.col}_avg"),
+            across(.cols = c(PEM_interruptor, IM, A_aggressive, A_int),
+                   .fns = ci.low,
+                   .names = "{.col}_CILow"),
+            across(.cols = c(PEM_interruptor, IM, A_aggressive, A_int),
+                   .fns = ci.high,
+                   .names = "{.col}_CIHigh")
+            ) %>% 
+  ungroup() %>% 
+  pivot_wider(names_from = interruption_style,
+              values_from = -c(int_sex, interruption_style)) %>% 
+  mutate(PEM = PEM_interruptor_avg_interruptive - PEM_interruptor_avg_agreeable,
+         PEM_CILow = mean(c(PEM_interruptor_CILow_agreeable,
+                            PEM_interruptor_CILow_interruptive)),
+         PEM_CIHigh = mean(c(PEM_interruptor_CIHigh_agreeable,
+                             PEM_interruptor_CIHigh_interruptive)),
+         IM = IM_avg_interruptive - IM_avg_agreeable, 
+         IM_CILow = mean(c(IM_CILow_agreeable,
+                            IM_CILow_interruptive)),
+         IM_CIHigh = mean(c(IM_CIHigh_agreeable,
+                             IM_CIHigh_interruptive)),
+         Aggressiveness = A_aggressive_avg_interruptive - A_aggressive_avg_agreeable, 
+         aggression_CILow = mean(c(A_aggressive_CILow_agreeable,
+                            A_aggressive_CILow_interruptive)),
+         aggression_CIHigh = mean(c(A_aggressive_CIHigh_agreeable,
+                             A_aggressive_CIHigh_interruptive)),
+         Intelligence = A_int_avg_interruptive - A_int_avg_agreeable, 
+         int_CILow = mean(c(A_int_CILow_agreeable,
+                            A_int_CILow_interruptive)),
+         int_CIHigh = mean(c(A_int_CIHigh_agreeable,
+                             A_int_CIHigh_interruptive))) %>% 
+  select(c(int_sex,
+           PEM, PEM_CILow, PEM_CIHigh,
+           IM, IM_CILow, IM_CIHigh,
+           Aggressiveness, aggression_CILow, aggression_CIHigh,
+           Intelligence, int_CILow, int_CIHigh
+           )) %>% 
+  mutate(
+         PEM_min = PEM - PEM_CILow,
+         PEM_max = PEM + PEM_CIHigh,
+         IM_min = IM - IM_CILow,
+         IM_max = IM + IM_CIHigh,
+         aggressiveness_min = Aggressiveness - aggression_CILow,
+         aggressiveness_max = Aggressiveness + aggression_CIHigh,
+         int_min = Intelligence - int_CILow,
+         int_max = Intelligence + int_CIHigh) %>% 
+  select(!matches("CILow|CIHigh")) %>% 
+  pivot_longer(c(PEM, IM, Aggressiveness, Intelligence),
+               names_to = "Trait",
+               values_to = "Response") %>% 
+  mutate(
+    lower_bound = case_when(
+      Trait == "PEM" ~ PEM_min,
+      Trait == "IM" ~ IM_min,
+      Trait == "Aggressiveness" ~ aggressiveness_min,
+      Trait == "Intelligence" ~ int_min),
+    upper_bound = case_when(
+      Trait == "PEM" ~ PEM_max,
+      Trait == "IM" ~ IM_max,
+      Trait == "Aggressiveness" ~ aggressiveness_max,
+      Trait == "Intelligence" ~ int_max)
+  ) %>% 
+  select(!matches("_min|_max"))
+```
+```{r visualizing this penalization}
+penalized_plot <- df_penalized %>% 
+  mutate(Trait = recode_factor(Trait,
+                               IM = "Interruptiveness",
+                               PEM = "Prosocial Engagement")) %>% 
+  ggplot(aes(x = int_race_gender,
+         y = Response,
+         fill = int_race_gender)) +
+  facet_wrap(~ Trait) +
+  geom_bar(stat = "identity",
+           position = position_dodge(0.9)) +
+  geom_errorbar(aes(ymin = lower_bound,
+                    ymax = upper_bound),
+                width = 0.75,
+                position = position_dodge(0.9)) +
+  theme_bw() +
+  theme(legend.position = "none") +
+  scale_fill_brewer(palette = "RdGy") + 
+  labs(x = "Race/Gender of Interruptor",
+       y = "Change in Rating",
+       title = "Changes in ratings between interruptive and agreeable conditions") +
+  theme(title = element_text(size=18),
+        legend.text = element_text(size=15),
+        axis.text = element_text(angle = 0, size = 12),
+        strip.text = element_text(size=12))
+penalized_plot
+
+#gender-wide comparisons
+penalized_plot_gender <- df_penalized_gender %>% 
+  ggplot(aes(x = int_sex,
+         y = Response,
+         fill = int_sex)) +
+  facet_wrap(~ Trait) +
+  geom_bar(stat = "identity",
+           position = position_dodge(0.9)) +
+  geom_errorbar(aes(ymin = lower_bound,
+                    ymax = upper_bound),
+                width = 0.75,
+                position = position_dodge(0.9)) +
+  theme_bw() +
+  theme(legend.position = "none") +
+  scale_fill_brewer(palette = "Reds") + 
+  labs(x = "Gender of Interruptor",
+       y = "Change in Rating",
+       title = "Changes in ratings between interruptive and agreeable conditions")
+penalized_plot_gender
+
+#race-wide comparisons
+penalized_plot_race <- df_penalized_race %>% 
+  ggplot(aes(x = int_race,
+         y = Response,
+         fill = int_race)) +
+  facet_wrap(~ Trait) +
+  geom_bar(stat = "identity",
+           position = position_dodge(0.9)) +
+  geom_errorbar(aes(ymin = lower_bound,
+                    ymax = upper_bound),
+                width = 0.75,
+                position = position_dodge(0.9)) +
+  theme_bw() +
+  theme(legend.position = "none") +
+  scale_fill_brewer(palette = "Reds") + 
+  labs(x = "Race of Interruptor",
+       y = "Change in Rating",
+       title = "Changes in ratings between interruptive and agreeable conditions")
+penalized_plot_race
+```
+```{r hypothesis plots}
+hyp_summary_data <- c(75, 10, 50, 90,
+                      77, 12, 53, 93,
+                      80, 5, 57, 88,
+                      78, 4, 65, 80)
+df_hypothesis <- setNames(
+  data.frame(df_pared_summary$int_race_gender,
+             toTitleCase(df_pared_summary$interruption_style),
+             df_pared_summary$metric,
+             hyp_summary_data,
+             hyp_summary_data - 3,
+             hyp_summary_data + 3),
+  c("Interruptor race/gender",
+    "Interruption style",
+    "Metric",
+    "response",
+    "lower_bound",
+    "upper_bound"))
+
+hypothesis_summary_plot <- df_hypothesis %>% 
+  ggplot(aes(x = Metric,
+         y = response,
+         fill = `Interruptor race/gender`)) +
+  facet_wrap(~ `Interruption style`) +
+  geom_bar(stat = "identity",
+           position = position_dodge(0.9)) +
+  theme_bw() +
+  scale_fill_brewer(palette = "RdGy") + 
+  labs(x = "Metric",
+       y = "Rating (0-100)",
+       title = "Judged Interruptiveness and Prosociality") +
+  scale_x_discrete(labels = c("Interruptiveness", "Prosocial Engagement")) + 
+  theme(title = element_text(size=18), legend.text = element_text(size=15),
+        axis.text = element_text(angle = 0, size = 12),
+        axis.text.y = element_blank(),
+        axis.ticks.y = element_blank(),
+        strip.text = element_text(size=12))
+hypothesis_summary_plot
+
+#penalization hypotheses plot
+df_hypothesis_penalized <- df_penalized %>% 
+  mutate(Response = c(-40, 80, 40, -20,
+                      -38, 80, 65, -15,
+                      -28, 77, 30, -8,
+                      -17, 69, 42, -1),
+         lower_bound = Response - 3,
+         upper_bound = Response + 3)
+
+hyp_penalize_plot <- df_hypothesis_penalized %>% 
+  mutate(Trait = recode_factor(Trait,
+                               IM = "Interruptiveness",
+                               PEM = "Prosocial Engagement")) %>% 
+  ggplot(aes(x = int_race_gender,
+             y = Response,
+             fill = int_race_gender)) +
+  facet_wrap(~ Trait) +
+  geom_bar(stat = "identity",
+           position = position_dodge(0.9)) +
+  theme_bw() +
+  theme(legend.position = "none") +
+  scale_fill_brewer(palette = "RdGy") + 
+  labs(x = "Race/Gender of Interruptor",
+       y = "Change in Rating",
+       title = "Changes in ratings between interruptive and agreeable conditions") +
+  theme(title = element_text(size=18), legend.text = element_text(size=15),
+        axis.text = element_text(angle = 0, size = 12),
+        axis.text.y = element_blank(),
+        axis.ticks.y = element_blank(),
+        strip.text = element_text(size=12))
+hyp_penalize_plot
 ```
 
 ```{r brms models}
 #simpler ones
+##race model for interruptive contexts
 PEM_model_race <- brm(PEM_interruptor ~ int_race + 
-                    (1 | workerid) +
-                    (1 | A_face) +
-                    (1 | A_name))
+                        (1 | A_face) +
+                        (1 | speaker_A) +
+                        (1 | B_face) +
+                        (1 | speaker_B),
+                      data = filter(df, interruption_style == "interruptive"))
+
 summary(PEM_model_race)
 
+PEM_model_gender_white <- brm(PEM_interruptor ~ int_sex + 
+                                (1 | A_face) +
+                                (1 | speaker_A) +
+                                (1 | B_face) +
+                                (1 | speaker_B),
+                              data = filter(df, interruption_style == "interruptive",
+                                            int_race == "White"))
+summary(PEM_model_gender_white)
+
 PEM_model_gender <- brm(PEM_interruptor ~ int_sex + 
-                    (1 | workerid) +
-                    (1 | A_face) +
-                    (1 | A_name))
+                          (1 | A_face) +
+                          (1 | speaker_A) +
+                          (1 | B_face) +
+                          (1 | speaker_B),
+                        data = filter(df, interruption_style == "interruptive"))
 summary(PEM_model_gender)
 
 IM_model_race <- brm(IM ~ int_race + 
-                    (1 | workerid) +
-                    (1 | A_face) +
-                    (1 | A_name))
+                       (1 | A_face) +
+                       (1 | speaker_A) +
+                       (1 | B_face) +
+                       (1 | speaker_B),
+                     data = filter(df, interruption_style == "interruptive"))
 summary(IM_model_race)
 
+IM_model_gender_white <- brm(IM ~ int_sex + 
+                         (1 | A_face) +
+                         (1 | speaker_A) +
+                         (1 | B_face) +
+                         (1 | speaker_B),
+                       data = filter(df, interruption_style == "interruptive",
+                                     int_race == "White"))
+summary(IM_model_gender_white)
+
 IM_model_gender <- brm(IM ~ int_sex + 
-                    (1 | workerid) +
-                    (1 | A_face) +
-                    (1 | A_name))
+                         (1 | A_face) +
+                         (1 | speaker_A) +
+                         (1 | B_face) +
+                         (1 | speaker_B),
+                       data = filter(df, interruption_style == "interruptive"))
 summary(IM_model_gender)
 
 #looking at interactions
-model_int <- brm(PEM_interruptor ~ int_race * int_sex
-                    (1 | workerid) +
-                    (1 | A_face) +
-                    (1 | A_name))
+PEM_model_int <- brm(PEM_interruptor ~ int_race * int_sex +
+                   (1 | A_face) +
+                   (1 | speaker_A) +
+                   (1 | B_face) +
+                   (1 | speaker_B),
+                 data = filter(df, interruption_style == "interruptive"))
+summary(PEM_model_int)
 
+## penalization
+PEM_model_penalized_race <- brm(PEM_interruptor ~ int_race*interruption_style + 
+                                  (1 | A_face) +
+                                  (1 | A_Age) +
+                                  (1 | speaker_A) +
+                                  (1 | B_face) +
+                                  (1 | speaker_B),
+                                data = df)
+summary(PEM_model_penalized_race)
+
+PEM_model_penalized_gender <- brm(PEM_interruptor ~ int_sex*interruption_style + 
+                                  (1 | A_face) +
+                                  (1 | A_Age) +
+                                  (1 | speaker_A) +
+                                  (1 | B_face) +
+                                  (1 | speaker_B),
+                                data = df)
+summary(PEM_model_penalized_gender)
+
+aggression_model_penalized_race <- brm(A_aggressive ~ int_race*interruption_style + 
+                                  (1 | A_face) +
+                                  (1 | A_Age) +
+                                  (1 | speaker_A) +
+                                  (1 | B_face) +
+                                  (1 | speaker_B),
+                                data = df)
+summary(aggression_model_penalized_race)
+
+```
+
+```{r lmer models}
+PEM_model_race_lmer <- lmer(PEM_interruptor ~ int_race + 
+                    # (1 | workerid) +
+                    (1 | A_face) +
+                    (1 | A_Age) +
+                    (1 | speaker_A),
+                    data = filter(df, interruption_style == "interruptive"))
+summary(PEM_model_race_lmer)
+
+PEM_model_gender_lmer <- lmer(PEM_interruptor ~ int_sex + 
+                    # (1 | workerid) +
+                    (1 | A_face) +
+                    (1 | A_Age) +
+                    (1 | speaker_A),
+                    data = filter(df, interruption_style == "interruptive",
+                                  int_race == "White"))
+summary(PEM_model_gender_lmer)
+
+PEM_model_gender_lmer_all <- lmer(PEM_interruptor ~ int_sex + 
+                    # (1 | workerid) +
+                    (1 | A_face) +
+                    (1 | A_Age) +
+                    (1 | speaker_A),
+                    data = filter(df, interruption_style == "interruptive"))
+summary(PEM_model_gender_lmer_all)
+
+IM_model_race_lmer <- lmer(IM ~ int_race + 
+                             (1 | A_face) +
+                             (1 | A_Age) +
+                             (1 | speaker_A) +
+                             (1 | speaker_B) +
+                             (1 | B_face),
+                           data = filter(df, interruption_style == "interruptive"))
+summary(IM_model_race_lmer)
+
+IM_model_gender_lmer <- lmer(PEM_interruptor ~ int_sex + 
+                               (1 | A_face) +
+                               (1 | A_Age) +
+                               (1 | speaker_A) +
+                               (1 | speaker_B) +
+                               (1 | B_face),
+                             data = filter(df, interruption_style == "interruptive",
+                                           int_race == "White"))
+summary(IM_model_gender_lmer)
+```
+
+```{r most important brms models}
+PEM_model_interaction <- brm(PEM_interruptor ~ ctr_int_race * ctr_int_sex,
+                             data = filter(df,
+                                           interruption_style == "interruptive"))
+summary(PEM_model_interaction)
+
+IM_model_interaction <- brm(IM ~ ctr_int_race * ctr_int_sex,
+                             data = filter(df,
+                                           interruption_style == "interruptive"))
+summary(IM_model_interaction)
+
+prosocial_pen_model <- brm(PEM_interruptor ~ ctr_int_race * ctr_int_sex * ctr_interruption_style,
+                           data = df)
+summary(prosocial_pen_model)
+
+IM_pen_model <- brm(IM ~ ctr_int_race * ctr_int_sex * ctr_interruption_style,
+                           data = df)
+summary(IM_pen_model)
+
+aggression_pen_model <- brm(A_aggressive ~ ctr_int_race * ctr_int_sex * ctr_interruption_style,
+                           data = df)
+summary(aggression_pen_model)
+
+intelligent_pen_model <- brm(A_int ~ ctr_int_race * ctr_int_sex * ctr_interruption_style,
+                           data = df)
+summary(intelligent_pen_model)
+```
+
+
+```{r general penalization dataframe for models}
+df_penalized_models <- df %>% 
+  pivot_wider(names_from = interruption_style,
+              values_from = c(PEM_interruptor, IM, A_aggressive, A_int))
+```
+
+
+```{r penalization lmer models}
+#prosociality
+PEM_penalization_race_lmer <- lmer(PEM_interruptor ~ int_race*interruption_style + 
+                    (1 | A_face) +
+                    (1 | A_Age) +
+                    (1 | speaker_A),
+                    data = df)
+summary(PEM_penalization_race_lmer)
+
+PEM_penalization_gender_lmer <- lmer(PEM_interruptor ~ int_sex*interruption_style + 
+                    (1 | A_face) +
+                    (1 | A_Age) +
+                    (1 | speaker_A),
+                    data = filter(df, int_race == "White"))
+summary(PEM_penalization_gender_lmer)
+
+PEM_penalization_gender_lmer_black <- lmer(PEM_interruptor ~ int_sex*interruption_style + 
+                    (1 | A_face) +
+                    (1 | A_Age) +
+                    (1 | speaker_A),
+                    data = df)
+summary(PEM_penalization_gender_lmer_black)
+
+#aggression
+aggro_penalization_race_lmer <- lmer(A_aggressive ~ int_race*interruption_style + 
+                    (1 | A_face) +
+                    (1 | A_Age) +
+                    (1 | speaker_A),
+                    data = df)
+summary(aggro_penalization_race_lmer)
+
+aggro_penalization_gender_lmer <- lmer(A_aggressive ~ int_sex*interruption_style + 
+                    (1 | A_face) +
+                    (1 | A_Age) +
+                    (1 | speaker_A),
+                    data = filter(df, int_race == "White"))
+summary(aggro_penalization_gender_lmer)
+```
+
+```{r exploringggg}
+aggression_race_lmer <- lmer(A_aggressive ~ int_race + 
+                               (1 | A_face) +
+                               (1 | A_Age) +
+                               (1 | speaker_A) +
+                               (1 | B_face),
+                             data = filter(df, interruption_style == "interruptive"))
+summary(aggression_race_lmer)
+
+aggression_race_male_lmer <- lmer(A_aggressive ~ int_race + 
+                               (1 | A_face) +
+                               (1 | A_Age) +
+                               (1 | speaker_A) +
+                               (1 | B_face),
+                             data = filter(df, interruption_style == "agreeable",
+                                           int_sex == "Male"))
+summary(aggression_race_male_lmer)
+
+aggression_interaction_lmer <- lmer(A_aggressive ~ int_race * int_sex + 
+                                      (1 | A_face) +
+                                      (1 | A_Age) +
+                                      (1 | speaker_A) +
+                                      (1 | B_face),
+                                    data = filter(df, interruption_style == "interruptive"))
+summary(aggression_interaction_lmer)
+
+intelligence_interaction_lmer <- lmer(A_int ~ int_race * int_sex + 
+                                      (1 | A_face) +
+                                      (1 | A_Age) +
+                                      (1 | speaker_A) +
+                                      (1 | B_face),
+                                    data = filter(df, interruption_style == "interruptive"))
+summary(intelligence_interaction_lmer)
+```
+
+```{r raw data traits}
+df_raw_traits <- df %>% 
+  select(c(int_race_gender, interruption_style,
+           PEM_interruptor, IM, A_aggressive, A_int)) %>% 
+  group_by(int_race_gender,
+           interruption_style) %>% 
+  summarize(across(.cols = c(PEM_interruptor, IM, A_aggressive, A_int),
+                   .fns = mean,
+                   .names = "{.col}_avg"),
+            across(.cols = c(PEM_interruptor, IM, A_aggressive, A_int),
+                   .fns = ci.low,
+                   .names = "{.col}_CILow"),
+            across(.cols = c(PEM_interruptor, IM, A_aggressive, A_int),
+                   .fns = ci.high,
+                   .names = "{.col}_CIHigh")
+            ) %>% 
+  ungroup() %>%
+  mutate(PEM = PEM_interruptor_avg,
+         PEM_CILow = PEM_interruptor_CILow,
+         PEM_CIHigh = PEM_interruptor_CIHigh,
+         IM = IM_avg, 
+         IM_CILow = IM_CILow,
+         IM_CIHigh = IM_CIHigh,
+         Aggressiveness = A_aggressive_avg, 
+         aggression_CILow = A_aggressive_CILow,
+         aggression_CIHigh = A_aggressive_CIHigh,
+         Intelligence = A_int_avg, 
+         int_CILow = A_int_CILow,
+         int_CIHigh = A_int_CIHigh) %>% 
+  select(c(int_race_gender,
+           interruption_style,
+           PEM, PEM_CILow, PEM_CIHigh,
+           IM, IM_CILow, IM_CIHigh,
+           Aggressiveness, aggression_CILow, aggression_CIHigh,
+           Intelligence, int_CILow, int_CIHigh
+           )) %>% 
+  mutate(
+         PEM_min = PEM - PEM_CILow,
+         PEM_max = PEM + PEM_CIHigh,
+         IM_min = IM - IM_CILow,
+         IM_max = IM + IM_CIHigh,
+         aggressiveness_min = Aggressiveness - aggression_CILow,
+         aggressiveness_max = Aggressiveness + aggression_CIHigh,
+         int_min = Intelligence - int_CILow,
+         int_max = Intelligence + int_CIHigh) %>% 
+  select(!matches("CILow|CIHigh")) %>% 
+  pivot_longer(c(PEM, IM, Aggressiveness, Intelligence),
+               names_to = "Trait",
+               values_to = "Response") %>% 
+  mutate(
+    lower_bound = case_when(
+      Trait == "PEM" ~ PEM_min,
+      Trait == "IM" ~ IM_min,
+      Trait == "Aggressiveness" ~ aggressiveness_min,
+      Trait == "Intelligence" ~ int_min),
+    upper_bound = case_when(
+      Trait == "PEM" ~ PEM_max,
+      Trait == "IM" ~ IM_max,
+      Trait == "Aggressiveness" ~ aggressiveness_max,
+      Trait == "Intelligence" ~ int_max),
+  ) %>% 
+  rename("Interruption Style" = interruption_style) %>% 
+  select(!matches("_min|_max"))
+
+#visualizing
+raw_plot <- df_raw_traits %>% 
+  mutate(Trait = recode_factor(Trait,
+                               IM = "Interruptiveness",
+                               PEM = "Prosocial Engagement"),
+         `Interruption Style` = recode_factor(`Interruption Style`,
+                                              agreeable = "Agreeable",
+                                              interruptive = "Interruptive")) %>% 
+  ggplot(aes(x = int_race_gender,
+         y = Response,
+         fill = int_race_gender)) +
+  facet_grid(`Interruption Style` ~ Trait) +
+  geom_bar(stat = "identity",
+           position = position_dodge(0.9)) +
+  geom_errorbar(aes(ymin = lower_bound,
+                    ymax = upper_bound),
+                width = 0.75,
+                position = position_dodge(0.9)) +
+  theme_bw() +
+  theme(legend.position = "none") +
+  scale_fill_brewer(palette = "RdGy") + 
+  labs(x = "Race/Gender of Interruptor",
+       y = "Rating",
+       title = "Ratings in interruptive and agreeable conditions") +
+  theme(title = element_text(size=18),
+        legend.text = element_text(size=15),
+        axis.text = element_text(angle = 20, size = 12),
+        strip.text = element_text(size=12))
+raw_plot
+```
+
+
+#Looking at participants' characteristics
+```{r demographics set-up}
+#category vectors
+AA_category <- c("AA", "AA, White", "Asian, AA", "AA, Latino",
+                 "Asian, AA, White", "AA, Latino, White")
+Latinx_category <- c("Latino", "Latino, White", "Asian, Latino", "Asian, Latino, White")
+AAPI_category <- c("Asian", "Asian, White", "PI")
+
+#introducing groups into subject info df
+subinfo_dem <- subinfo %>%
+  filter(!(workerid %in% IDs_exc)) %>%
+  mutate(across(
+    .cols = c(age, affiliation),
+    .fns = as.numeric
+    )) %>%
+  select(c(workerid, affiliation, age, gender, race)) %>% 
+  mutate(raceGroup = case_when(race %in% AA_category ~ "African American",
+                               race %in% Latinx_category ~ "Latinx",
+                               race %in% AAPI_category ~ "Asian/Pacific Islander",
+                               race == "White" ~ "White",
+                               TRUE ~ "Not reported"),
+         age = case_when(age == 500 ~ 50, #fixing one participant's typo
+                         TRUE ~ age),
+         affiliationGroup = case_when((affiliation > -1) & (affiliation < 3) ~ "Liberal",
+                                      (affiliation == 3) ~ "Independent",
+                                      (affiliation > 3) ~ "Conservative",
+                                      TRUE ~ "no response"))
+  
+  
+  
+  
+#race IDs
+AA_ids <- filter(subinfo_dem, raceGroup == "African American")$workerid
+Latinx_ids <- filter(subinfo_dem, raceGroup == "Latinx")$workerid
+Asian_ids <- filter(subinfo_dem, raceGroup == "Asian/Pacific Islander")$workerid
+White_ids <- filter(subinfo_dem, raceGroup == "White")$workerid
+  
+#age IDs
+old_ids <- filter(subinfo_dem, age >= quantile(age, .75, na.rm = TRUE))$workerid
+young_ids <- filter(subinfo_dem, age <= quantile(age, .25, na.rm = TRUE))$workerid
+  
+#gender IDs
+male_ids <- filter(subinfo_dem, gender == "Male")$workerid
+female_ids <- filter(subinfo_dem, gender == "Female")$workerid
+nb_ids <- filter(subinfo_dem, gender == "Other")$workerid
+  
+#political affiliation IDs
+liberal_ids <- filter(subinfo_dem, affiliationGroup == "Liberal")$workerid
+independent_ids <- filter(subinfo_dem, affiliationGroup == "Independent")$workerid
+conservative_ids <- filter(subinfo_dem, affiliationGroup == "Conservative")$workerid
+noAff_ids <- filter(subinfo_dem, affiliationGroup == "no response")$workerid
+
+#incorporating this info into dataframes
+df_demographic <- df %>% 
+  mutate(p_race = as.factor(case_when((workerid %in% AA_ids) ~ "African American",
+                                      (workerid %in% Latinx_ids) ~ "Latinx",
+                                      (workerid %in% Asian_ids) ~ "Asian/Pacific Islander",
+                                      (workerid %in% White_ids) ~ "White",
+                                      TRUE ~ "Not reported")),
+         p_age = as.factor(case_when((workerid %in% old_ids) ~ "Older quartile (50+)",
+                              (workerid %in% young_ids) ~ "Younger quartile (18-29)",
+                               TRUE ~ "Middle half (29-50)")),
+         p_gender = as.factor(case_when((workerid %in% male_ids) ~ "Male",
+                              (workerid %in% female_ids) ~ "Female",
+                              (workerid %in% nb_ids) ~ "Other/Non-binary",
+                              TRUE ~ "Not reported")),
+         p_affiliation = as.factor(case_when((workerid %in% liberal_ids) ~ "Liberal",
+                                      (workerid %in% independent_ids) ~ "Independent",
+                                      (workerid %in% conservative_ids) ~ "Conservative",
+                                      TRUE ~ "Not reported")))
+```
+
+
+```{r Participant race}
+#set up dataframes
+##"summary" df
+df_summary_p_race <- df_demographic %>% 
+  select(c(int_race_gender,
+           int_race, ctr_int_race,
+           int_sex, ctr_int_sex,
+           A_face, speaker_A,
+           interruption_style, ctr_interruption_style,
+           PEM_interruptor, IM,
+           p_race)) %>% 
+  group_by(int_race_gender, interruption_style, p_race) %>% 
+  summarize(PEM_avg = mean(PEM_interruptor),
+            PEM_CILow = ci.low(PEM_interruptor),
+            PEM_CIHigh = ci.high(PEM_interruptor),
+            IM_avg = mean(IM),
+            IM_CILow = ci.low(IM),
+            IM_CIHigh = ci.high(IM)) %>% 
+  ungroup() %>% 
+  mutate(PEM_min = PEM_avg - PEM_CILow,
+         PEM_max = PEM_avg + PEM_CIHigh,
+         IM_min = IM_avg - IM_CILow,
+         IM_max = IM_avg + IM_CIHigh) %>% 
+  select(-c(PEM_CILow,
+            PEM_CIHigh,
+            IM_CILow,
+            IM_CIHigh)) %>% 
+  pivot_longer(c(PEM_avg,
+                 IM_avg),
+               names_to = "metric",
+               values_to = "response") %>% 
+  mutate(lower_bound = if_else(metric == "PEM_avg",
+                               PEM_min,
+                               IM_min),
+         upper_bound = if_else(metric == "PEM_avg",
+                               PEM_max,
+                               IM_max),
+         metric = recode(as.factor(metric),
+                         "PEM_avg" = "PEM",
+                         "IM_avg" = "IM")) %>% 
+  select(-c(PEM_max, PEM_min, IM_max, IM_min))
+
+##"penalization" df
+df_pen_p_race <- df_demographic %>% 
+  select(c(int_race_gender, interruption_style,
+           PEM_interruptor, IM, A_aggressive, A_int,
+           p_race)) %>% 
+  group_by(int_race_gender,
+           interruption_style,
+           p_race) %>% 
+  summarize(across(.cols = c(PEM_interruptor, IM, A_aggressive, A_int),
+                   .fns = mean,
+                   .names = "{.col}_avg"),
+            across(.cols = c(PEM_interruptor, IM, A_aggressive, A_int),
+                   .fns = ci.low,
+                   .names = "{.col}_CILow"),
+            across(.cols = c(PEM_interruptor, IM, A_aggressive, A_int),
+                   .fns = ci.high,
+                   .names = "{.col}_CIHigh")
+            ) %>% 
+  ungroup() %>% 
+  pivot_wider(names_from = interruption_style,
+              values_from = -c(int_race_gender, interruption_style, p_race)) %>% 
+  mutate(PEM = PEM_interruptor_avg_interruptive - PEM_interruptor_avg_agreeable,
+         PEM_CILow = mean(c(PEM_interruptor_CILow_agreeable,
+                            PEM_interruptor_CILow_interruptive),
+                          na.rm = TRUE),
+         PEM_CIHigh = mean(c(PEM_interruptor_CIHigh_agreeable,
+                             PEM_interruptor_CIHigh_interruptive),
+                          na.rm = TRUE),
+         IM = IM_avg_interruptive - IM_avg_agreeable, 
+         IM_CILow = mean(c(IM_CILow_agreeable,
+                            IM_CILow_interruptive),
+                          na.rm = TRUE),
+         IM_CIHigh = mean(c(IM_CIHigh_agreeable,
+                             IM_CIHigh_interruptive),
+                          na.rm = TRUE),
+         Aggressiveness = A_aggressive_avg_interruptive - A_aggressive_avg_agreeable, 
+         aggression_CILow = mean(c(A_aggressive_CILow_agreeable,
+                            A_aggressive_CILow_interruptive),
+                          na.rm = TRUE),
+         aggression_CIHigh = mean(c(A_aggressive_CIHigh_agreeable,
+                             A_aggressive_CIHigh_interruptive),
+                          na.rm = TRUE),
+         Intelligence = A_int_avg_interruptive - A_int_avg_agreeable, 
+         int_CILow = mean(c(A_int_CILow_agreeable,
+                            A_int_CILow_interruptive),
+                          na.rm = TRUE),
+         int_CIHigh = mean(c(A_int_CIHigh_agreeable,
+                             A_int_CIHigh_interruptive),
+                          na.rm = TRUE)) %>% 
+  select(c(int_race_gender, p_race,
+           PEM, PEM_CILow, PEM_CIHigh,
+           IM, IM_CILow, IM_CIHigh,
+           Aggressiveness, aggression_CILow, aggression_CIHigh,
+           Intelligence, int_CILow, int_CIHigh
+           )) %>% 
+  mutate(
+         PEM_min = PEM - PEM_CILow,
+         PEM_max = PEM + PEM_CIHigh,
+         IM_min = IM - IM_CILow,
+         IM_max = IM + IM_CIHigh,
+         aggressiveness_min = Aggressiveness - aggression_CILow,
+         aggressiveness_max = Aggressiveness + aggression_CIHigh,
+         int_min = Intelligence - int_CILow,
+         int_max = Intelligence + int_CIHigh) %>% 
+  select(!matches("CILow|CIHigh")) %>% 
+  pivot_longer(c(PEM, IM, Aggressiveness, Intelligence),
+               names_to = "Trait",
+               values_to = "Response") %>% 
+  mutate(
+    lower_bound = case_when(
+      Trait == "PEM" ~ PEM_min,
+      Trait == "IM" ~ IM_min,
+      Trait == "Aggressiveness" ~ aggressiveness_min,
+      Trait == "Intelligence" ~ int_min),
+    upper_bound = case_when(
+      Trait == "PEM" ~ PEM_max,
+      Trait == "IM" ~ IM_max,
+      Trait == "Aggressiveness" ~ aggressiveness_max,
+      Trait == "Intelligence" ~ int_max)
+  ) %>% 
+  select(!matches("_min|_max"))
+
+#visualizations
+##"summary" plot
+summary_plot_p_race <- df_summary_p_race %>% 
+  ggplot(aes(x = metric,
+         y = response,
+         fill = int_race_gender)) +
+  facet_grid(p_race ~ toTitleCase(interruption_style)) +
+  geom_bar(stat = "identity",
+           position = position_dodge(0.9)) +
+  geom_errorbar(aes(ymin = lower_bound,
+                    ymax = upper_bound),
+                width = 0.75,
+                position = position_dodge(0.9)) +
+  theme_bw() +
+  scale_fill_brewer(palette = "RdGy") + 
+  labs(x = "Metric",
+       y = "Rating (0-100)",
+       title = "Judged Interruptiveness and Prosociality",
+       fill = "Interruptor race/gender") +
+  scale_x_discrete(labels = c("Interruptiveness", "Prosocial Engagement")) + 
+  theme(title = element_text(size=18),
+        legend.text = element_text(size=15),
+        axis.text = element_text(angle = 0, size = 12),
+        strip.text = element_text(size=12))
+summary_plot_p_race
+  
+##"penalization" plot
+penalized_plot_p_race <- filter(df_pen_p_race, p_race != "Not reported") %>% 
+  mutate(Trait = recode_factor(Trait,
+                               IM = "Interruptiveness",
+                               PEM = "Prosocial Engagement")) %>% 
+  ggplot(aes(x = int_race_gender,
+         y = Response,
+         fill = p_race)) +
+  facet_wrap(~ Trait) +
+  geom_bar(stat = "identity",
+           position = position_dodge(0.9)) +
+  geom_errorbar(aes(ymin = lower_bound,
+                    ymax = upper_bound),
+                width = 0.75,
+                position = position_dodge(0.9)) +
+  theme_bw() +
+  # theme(legend.position = "none") +
+  scale_fill_brewer(palette = "RdGy",
+                    name = "Participant race") + 
+  labs(x = "Race/Gender of Interruptor",
+       y = "Change in Rating",
+       title = "Changes in ratings between interruptive and agreeable conditions") +
+  theme(title = element_text(size=18),
+        legend.text = element_text(size=15),
+        axis.text = element_text(angle = 0, size = 12),
+        strip.text = element_text(size=12))
+penalized_plot_p_race
+  
+```
+
+```{r Participant age}
+#set up dataframes
+##"summary" df
+df_summary_p_age <- df_demographic %>% 
+  select(c(int_race_gender,
+           int_race, ctr_int_race,
+           int_sex, ctr_int_sex,
+           A_face, speaker_A,
+           interruption_style, ctr_interruption_style,
+           PEM_interruptor, IM,
+           p_age)) %>% 
+  group_by(int_race_gender, interruption_style, p_age) %>% 
+  summarize(PEM_avg = mean(PEM_interruptor),
+            PEM_CILow = ci.low(PEM_interruptor),
+            PEM_CIHigh = ci.high(PEM_interruptor),
+            IM_avg = mean(IM),
+            IM_CILow = ci.low(IM),
+            IM_CIHigh = ci.high(IM)) %>% 
+  ungroup() %>% 
+  mutate(PEM_min = PEM_avg - PEM_CILow,
+         PEM_max = PEM_avg + PEM_CIHigh,
+         IM_min = IM_avg - IM_CILow,
+         IM_max = IM_avg + IM_CIHigh) %>% 
+  select(-c(PEM_CILow,
+            PEM_CIHigh,
+            IM_CILow,
+            IM_CIHigh)) %>% 
+  pivot_longer(c(PEM_avg,
+                 IM_avg),
+               names_to = "metric",
+               values_to = "response") %>% 
+  mutate(lower_bound = if_else(metric == "PEM_avg",
+                               PEM_min,
+                               IM_min),
+         upper_bound = if_else(metric == "PEM_avg",
+                               PEM_max,
+                               IM_max),
+         metric = recode(as.factor(metric),
+                         "PEM_avg" = "PEM",
+                         "IM_avg" = "IM")) %>% 
+  select(-c(PEM_max, PEM_min, IM_max, IM_min))
+
+##"penalization" df
+df_pen_p_age <- df_demographic %>% 
+  select(c(int_race_gender, interruption_style,
+           PEM_interruptor, IM, A_aggressive, A_int,
+           p_age)) %>% 
+  group_by(int_race_gender,
+           interruption_style,
+           p_age) %>% 
+  summarize(across(.cols = c(PEM_interruptor, IM, A_aggressive, A_int),
+                   .fns = mean,
+                   .names = "{.col}_avg"),
+            across(.cols = c(PEM_interruptor, IM, A_aggressive, A_int),
+                   .fns = ci.low,
+                   .names = "{.col}_CILow"),
+            across(.cols = c(PEM_interruptor, IM, A_aggressive, A_int),
+                   .fns = ci.high,
+                   .names = "{.col}_CIHigh")
+            ) %>% 
+  ungroup() %>% 
+  pivot_wider(names_from = interruption_style,
+              values_from = -c(int_race_gender, interruption_style, p_age)) %>% 
+  mutate(PEM = PEM_interruptor_avg_interruptive - PEM_interruptor_avg_agreeable,
+         PEM_CILow = mean(c(PEM_interruptor_CILow_agreeable,
+                            PEM_interruptor_CILow_interruptive),
+                          na.rm = TRUE),
+         PEM_CIHigh = mean(c(PEM_interruptor_CIHigh_agreeable,
+                             PEM_interruptor_CIHigh_interruptive),
+                           na.rm = TRUE),
+         IM = IM_avg_interruptive - IM_avg_agreeable, 
+         IM_CILow = mean(c(IM_CILow_agreeable,
+                           IM_CILow_interruptive),
+                         na.rm = TRUE),
+         IM_CIHigh = mean(c(IM_CIHigh_agreeable,
+                            IM_CIHigh_interruptive),
+                          na.rm = TRUE),
+         Aggressiveness = A_aggressive_avg_interruptive - A_aggressive_avg_agreeable, 
+         aggression_CILow = mean(c(A_aggressive_CILow_agreeable,
+                                   A_aggressive_CILow_interruptive),
+                                 na.rm = TRUE),
+         aggression_CIHigh = mean(c(A_aggressive_CIHigh_agreeable,
+                                    A_aggressive_CIHigh_interruptive),
+                                  na.rm = TRUE),
+         Intelligence = A_int_avg_interruptive - A_int_avg_agreeable, 
+         int_CILow = mean(c(A_int_CILow_agreeable,
+                            A_int_CILow_interruptive),
+                          na.rm = TRUE),
+         int_CIHigh = mean(c(A_int_CIHigh_agreeable,
+                             A_int_CIHigh_interruptive),
+                           na.rm = TRUE)) %>% 
+  select(c(int_race_gender, p_age,
+           PEM, PEM_CILow, PEM_CIHigh,
+           IM, IM_CILow, IM_CIHigh,
+           Aggressiveness, aggression_CILow, aggression_CIHigh,
+           Intelligence, int_CILow, int_CIHigh
+           )) %>% 
+  mutate(
+         PEM_min = PEM - PEM_CILow,
+         PEM_max = PEM + PEM_CIHigh,
+         IM_min = IM - IM_CILow,
+         IM_max = IM + IM_CIHigh,
+         aggressiveness_min = Aggressiveness - aggression_CILow,
+         aggressiveness_max = Aggressiveness + aggression_CIHigh,
+         int_min = Intelligence - int_CILow,
+         int_max = Intelligence + int_CIHigh) %>% 
+  select(!matches("CILow|CIHigh")) %>% 
+  pivot_longer(c(PEM, IM, Aggressiveness, Intelligence),
+               names_to = "Trait",
+               values_to = "Response") %>% 
+  mutate(
+    lower_bound = case_when(
+      Trait == "PEM" ~ PEM_min,
+      Trait == "IM" ~ IM_min,
+      Trait == "Aggressiveness" ~ aggressiveness_min,
+      Trait == "Intelligence" ~ int_min),
+    upper_bound = case_when(
+      Trait == "PEM" ~ PEM_max,
+      Trait == "IM" ~ IM_max,
+      Trait == "Aggressiveness" ~ aggressiveness_max,
+      Trait == "Intelligence" ~ int_max)
+  ) %>% 
+  select(!matches("_min|_max"))  
+#visualizations
+##"summary" plot
+summary_plot_p_age <- df_summary_p_age %>% 
+  ggplot(aes(x = metric,
+         y = response,
+         fill = int_race_gender)) +
+  facet_grid(p_age ~ toTitleCase(interruption_style)) +
+  geom_bar(stat = "identity",
+           position = position_dodge(0.9)) +
+  geom_errorbar(aes(ymin = lower_bound,
+                    ymax = upper_bound),
+                width = 0.75,
+                position = position_dodge(0.9)) +
+  theme_bw() +
+  scale_fill_brewer(palette = "RdGy") + 
+  labs(x = "Metric",
+       y = "Rating (0-100)",
+       title = "Judged Interruptiveness and Prosociality",
+       fill = "Interruptor race/gender") +
+  scale_x_discrete(labels = c("Interruptiveness", "Prosocial Engagement")) + 
+  theme(title = element_text(size=18),
+        legend.text = element_text(size=15),
+        axis.text = element_text(angle = 0, size = 12),
+        strip.text = element_text(size=12))
+summary_plot_p_age
+
+##"penalization" plot
+penalized_plot_p_age <- df_pen_p_age %>% 
+  mutate(Trait = recode_factor(Trait,
+                               IM = "Interruptiveness",
+                               PEM = "Prosocial Engagement")) %>% 
+  ggplot(aes(x = int_race_gender,
+         y = Response,
+         fill = p_age)) +
+  facet_wrap(~ Trait) +
+  geom_bar(stat = "identity",
+           position = position_dodge(0.9)) +
+  geom_errorbar(aes(ymin = lower_bound,
+                    ymax = upper_bound),
+                width = 0.75,
+                position = position_dodge(0.9)) +
+  theme_bw() +
+  # theme(legend.position = "none") +
+  scale_fill_brewer(palette = "Reds",
+                    name = "Participant age \n quartile") + 
+  labs(x = "Race/Gender of Interruptor",
+       y = "Change in Rating",
+       title = "Changes in ratings between interruptive and agreeable conditions") +
+  theme(title = element_text(size=18),
+        legend.text = element_text(size=15),
+        axis.text = element_text(angle = 0, size = 12),
+        strip.text = element_text(size=12))
+penalized_plot_p_age
+
+```
+
+```{r Participant gender}
+#set up dataframes
+##"summary" df
+df_summary_p_gender <- df_demographic %>% 
+  select(c(int_race_gender,
+           int_race, ctr_int_race,
+           int_sex, ctr_int_sex,
+           A_face, speaker_A,
+           interruption_style, ctr_interruption_style,
+           PEM_interruptor, IM,
+           p_gender)) %>% 
+  group_by(int_race_gender, interruption_style, p_gender) %>% 
+  summarize(PEM_avg = mean(PEM_interruptor),
+            PEM_CILow = ci.low(PEM_interruptor),
+            PEM_CIHigh = ci.high(PEM_interruptor),
+            IM_avg = mean(IM),
+            IM_CILow = ci.low(IM),
+            IM_CIHigh = ci.high(IM)) %>% 
+  ungroup() %>% 
+  mutate(PEM_min = PEM_avg - PEM_CILow,
+         PEM_max = PEM_avg + PEM_CIHigh,
+         IM_min = IM_avg - IM_CILow,
+         IM_max = IM_avg + IM_CIHigh) %>% 
+  select(-c(PEM_CILow,
+            PEM_CIHigh,
+            IM_CILow,
+            IM_CIHigh)) %>% 
+  pivot_longer(c(PEM_avg,
+                 IM_avg),
+               names_to = "metric",
+               values_to = "response") %>% 
+  mutate(lower_bound = if_else(metric == "PEM_avg",
+                               PEM_min,
+                               IM_min),
+         upper_bound = if_else(metric == "PEM_avg",
+                               PEM_max,
+                               IM_max),
+         metric = recode(as.factor(metric),
+                         "PEM_avg" = "PEM",
+                         "IM_avg" = "IM")) %>% 
+  select(-c(PEM_max, PEM_min, IM_max, IM_min))
+
+##"penalization" df
+df_pen_p_gender <- df_demographic %>% 
+  select(c(int_race_gender, interruption_style,
+           PEM_interruptor, IM, A_aggressive, A_int,
+           p_gender)) %>% 
+  group_by(int_race_gender,
+           interruption_style,
+           p_gender) %>% 
+  summarize(across(.cols = c(PEM_interruptor, IM, A_aggressive, A_int),
+                   .fns = mean,
+                   .names = "{.col}_avg"),
+            across(.cols = c(PEM_interruptor, IM, A_aggressive, A_int),
+                   .fns = ci.low,
+                   .names = "{.col}_CILow"),
+            across(.cols = c(PEM_interruptor, IM, A_aggressive, A_int),
+                   .fns = ci.high,
+                   .names = "{.col}_CIHigh")
+            ) %>% 
+  ungroup() %>% 
+  pivot_wider(names_from = interruption_style,
+              values_from = -c(int_race_gender, interruption_style, p_gender)) %>% 
+  mutate(PEM = PEM_interruptor_avg_interruptive - PEM_interruptor_avg_agreeable,
+         PEM_CILow = mean(c(PEM_interruptor_CILow_agreeable,
+                            PEM_interruptor_CILow_interruptive),
+                          na.rm = TRUE),
+         PEM_CIHigh = mean(c(PEM_interruptor_CIHigh_agreeable,
+                             PEM_interruptor_CIHigh_interruptive),
+                           na.rm = TRUE),
+         IM = IM_avg_interruptive - IM_avg_agreeable, 
+         IM_CILow = mean(c(IM_CILow_agreeable,
+                           IM_CILow_interruptive),
+                         na.rm = TRUE),
+         IM_CIHigh = mean(c(IM_CIHigh_agreeable,
+                            IM_CIHigh_interruptive),
+                          na.rm = TRUE),
+         Aggressiveness = A_aggressive_avg_interruptive - A_aggressive_avg_agreeable, 
+         aggression_CILow = mean(c(A_aggressive_CILow_agreeable,
+                                   A_aggressive_CILow_interruptive),
+                                 na.rm = TRUE),
+         aggression_CIHigh = mean(c(A_aggressive_CIHigh_agreeable,
+                                    A_aggressive_CIHigh_interruptive),
+                                  na.rm = TRUE),
+         Intelligence = A_int_avg_interruptive - A_int_avg_agreeable, 
+         int_CILow = mean(c(A_int_CILow_agreeable,
+                            A_int_CILow_interruptive),
+                          na.rm = TRUE),
+         int_CIHigh = mean(c(A_int_CIHigh_agreeable,
+                             A_int_CIHigh_interruptive),
+                           na.rm = TRUE)) %>% 
+  select(c(int_race_gender, p_gender,
+           PEM, PEM_CILow, PEM_CIHigh,
+           IM, IM_CILow, IM_CIHigh,
+           Aggressiveness, aggression_CILow, aggression_CIHigh,
+           Intelligence, int_CILow, int_CIHigh
+           )) %>% 
+  mutate(
+         PEM_min = PEM - PEM_CILow,
+         PEM_max = PEM + PEM_CIHigh,
+         IM_min = IM - IM_CILow,
+         IM_max = IM + IM_CIHigh,
+         aggressiveness_min = Aggressiveness - aggression_CILow,
+         aggressiveness_max = Aggressiveness + aggression_CIHigh,
+         int_min = Intelligence - int_CILow,
+         int_max = Intelligence + int_CIHigh) %>% 
+  select(!matches("CILow|CIHigh")) %>% 
+  pivot_longer(c(PEM, IM, Aggressiveness, Intelligence),
+               names_to = "Trait",
+               values_to = "Response") %>% 
+  mutate(
+    lower_bound = case_when(
+      Trait == "PEM" ~ PEM_min,
+      Trait == "IM" ~ IM_min,
+      Trait == "Aggressiveness" ~ aggressiveness_min,
+      Trait == "Intelligence" ~ int_min),
+    upper_bound = case_when(
+      Trait == "PEM" ~ PEM_max,
+      Trait == "IM" ~ IM_max,
+      Trait == "Aggressiveness" ~ aggressiveness_max,
+      Trait == "Intelligence" ~ int_max)
+  ) %>% 
+  select(!matches("_min|_max"))  
+
+
+#visualizations
+##"summary" plot
+summary_plot_p_gender <- df_summary_p_gender %>% 
+  ggplot(aes(x = metric,
+         y = response,
+         fill = int_race_gender)) +
+  facet_grid(p_gender ~ toTitleCase(interruption_style)) +
+  geom_bar(stat = "identity",
+           position = position_dodge(0.9)) +
+  geom_errorbar(aes(ymin = lower_bound,
+                    ymax = upper_bound),
+                width = 0.75,
+                position = position_dodge(0.9)) +
+  theme_bw() +
+  scale_fill_brewer(palette = "RdGy") + 
+  labs(x = "Metric",
+       y = "Rating (0-100)",
+       title = "Judged Interruptiveness and Prosociality",
+       fill = "Interruptor race/gender") +
+  scale_x_discrete(labels = c("Interruptiveness", "Prosocial Engagement")) + 
+  theme(title = element_text(size=18),
+        legend.text = element_text(size=15),
+        axis.text = element_text(angle = 0, size = 12),
+        strip.text = element_text(size=12))
+summary_plot_p_gender
+
+##"penalization" plot
+penalized_plot_p_gender <- (filter(df_pen_p_gender,
+                                   p_gender %in% c("Male", "Female"))) %>% 
+  mutate(Trait = recode_factor(Trait,
+                               IM = "Interruptiveness",
+                               PEM = "Prosocial Engagement")) %>% 
+  ggplot(aes(x = int_race_gender,
+         y = Response,
+         fill = p_gender)) +
+  facet_wrap(~ Trait) +
+  geom_bar(stat = "identity",
+           position = position_dodge(0.9)) +
+  geom_errorbar(aes(ymin = lower_bound,
+                    ymax = upper_bound),
+                width = 0.75,
+                position = position_dodge(0.9)) +
+  theme_bw() +
+  # theme(legend.position = "none") +
+  scale_fill_brewer(palette = "Reds",
+                    name = "Participant gender") + 
+  labs(x = "Race/Gender of Interruptor",
+       y = "Change in Rating",
+       title = "Changes in ratings between interruptive and agreeable conditions") +
+  theme(title = element_text(size=18),
+        legend.text = element_text(size=15),
+        axis.text = element_text(angle = 0, size = 12),
+        strip.text = element_text(size=12))
+penalized_plot_p_gender
+```
+
+```{r Participant political affiliation}
+#set up dataframes
+##"summary" df
+df_summary_p_affiliation <- df_demographic %>% 
+  select(c(int_race_gender,
+           int_race, ctr_int_race,
+           int_sex, ctr_int_sex,
+           A_face, speaker_A,
+           interruption_style, ctr_interruption_style,
+           PEM_interruptor, IM,
+           p_affiliation)) %>% 
+  group_by(int_race_gender, interruption_style, p_affiliation) %>% 
+  summarize(PEM_avg = mean(PEM_interruptor),
+            PEM_CILow = ci.low(PEM_interruptor),
+            PEM_CIHigh = ci.high(PEM_interruptor),
+            IM_avg = mean(IM),
+            IM_CILow = ci.low(IM),
+            IM_CIHigh = ci.high(IM)) %>% 
+  ungroup() %>% 
+  mutate(PEM_min = PEM_avg - PEM_CILow,
+         PEM_max = PEM_avg + PEM_CIHigh,
+         IM_min = IM_avg - IM_CILow,
+         IM_max = IM_avg + IM_CIHigh) %>% 
+  select(-c(PEM_CILow,
+            PEM_CIHigh,
+            IM_CILow,
+            IM_CIHigh)) %>% 
+  pivot_longer(c(PEM_avg,
+                 IM_avg),
+               names_to = "metric",
+               values_to = "response") %>% 
+  mutate(lower_bound = if_else(metric == "PEM_avg",
+                               PEM_min,
+                               IM_min),
+         upper_bound = if_else(metric == "PEM_avg",
+                               PEM_max,
+                               IM_max),
+         metric = recode(as.factor(metric),
+                         "PEM_avg" = "PEM",
+                         "IM_avg" = "IM")) %>% 
+  select(-c(PEM_max, PEM_min, IM_max, IM_min))
+  
+##"penalization" df
+df_pen_p_affiliation <- df_demographic %>% 
+  select(c(int_race_gender, interruption_style,
+           PEM_interruptor, IM, A_aggressive, A_int,
+           p_affiliation)) %>% 
+  group_by(int_race_gender,
+           interruption_style,
+           p_affiliation) %>% 
+  summarize(across(.cols = c(PEM_interruptor, IM, A_aggressive, A_int),
+                   .fns = mean,
+                   .names = "{.col}_avg"),
+            across(.cols = c(PEM_interruptor, IM, A_aggressive, A_int),
+                   .fns = ci.low,
+                   .names = "{.col}_CILow"),
+            across(.cols = c(PEM_interruptor, IM, A_aggressive, A_int),
+                   .fns = ci.high,
+                   .names = "{.col}_CIHigh")
+            ) %>% 
+  ungroup() %>% 
+  pivot_wider(names_from = interruption_style,
+              values_from = -c(int_race_gender, interruption_style, p_affiliation)) %>% 
+  mutate(PEM = PEM_interruptor_avg_interruptive - PEM_interruptor_avg_agreeable,
+         PEM_CILow = mean(c(PEM_interruptor_CILow_agreeable,
+                            PEM_interruptor_CILow_interruptive),
+                          na.rm = TRUE),
+         PEM_CIHigh = mean(c(PEM_interruptor_CIHigh_agreeable,
+                             PEM_interruptor_CIHigh_interruptive),
+                           na.rm = TRUE),
+         IM = IM_avg_interruptive - IM_avg_agreeable, 
+         IM_CILow = mean(c(IM_CILow_agreeable,
+                           IM_CILow_interruptive),
+                         na.rm = TRUE),
+         IM_CIHigh = mean(c(IM_CIHigh_agreeable,
+                            IM_CIHigh_interruptive),
+                          na.rm = TRUE),
+         Aggressiveness = A_aggressive_avg_interruptive - A_aggressive_avg_agreeable, 
+         aggression_CILow = mean(c(A_aggressive_CILow_agreeable,
+                                   A_aggressive_CILow_interruptive),
+                                 na.rm = TRUE),
+         aggression_CIHigh = mean(c(A_aggressive_CIHigh_agreeable,
+                                    A_aggressive_CIHigh_interruptive),
+                                  na.rm = TRUE),
+         Intelligence = A_int_avg_interruptive - A_int_avg_agreeable, 
+         int_CILow = mean(c(A_int_CILow_agreeable,
+                            A_int_CILow_interruptive),
+                          na.rm = TRUE),
+         int_CIHigh = mean(c(A_int_CIHigh_agreeable,
+                             A_int_CIHigh_interruptive),
+                           na.rm = TRUE)) %>% 
+  select(c(int_race_gender, p_affiliation,
+           PEM, PEM_CILow, PEM_CIHigh,
+           IM, IM_CILow, IM_CIHigh,
+           Aggressiveness, aggression_CILow, aggression_CIHigh,
+           Intelligence, int_CILow, int_CIHigh
+           )) %>% 
+  mutate(
+         PEM_min = PEM - PEM_CILow,
+         PEM_max = PEM + PEM_CIHigh,
+         IM_min = IM - IM_CILow,
+         IM_max = IM + IM_CIHigh,
+         aggressiveness_min = Aggressiveness - aggression_CILow,
+         aggressiveness_max = Aggressiveness + aggression_CIHigh,
+         int_min = Intelligence - int_CILow,
+         int_max = Intelligence + int_CIHigh) %>% 
+  select(!matches("CILow|CIHigh")) %>% 
+  pivot_longer(c(PEM, IM, Aggressiveness, Intelligence),
+               names_to = "Trait",
+               values_to = "Response") %>% 
+  mutate(
+    lower_bound = case_when(
+      Trait == "PEM" ~ PEM_min,
+      Trait == "IM" ~ IM_min,
+      Trait == "Aggressiveness" ~ aggressiveness_min,
+      Trait == "Intelligence" ~ int_min),
+    upper_bound = case_when(
+      Trait == "PEM" ~ PEM_max,
+      Trait == "IM" ~ IM_max,
+      Trait == "Aggressiveness" ~ aggressiveness_max,
+      Trait == "Intelligence" ~ int_max)
+  ) %>% 
+  select(!matches("_min|_max"))
+  
+
+#visualizations
+##"summary" plot
+summary_plot_p_affiliation <- df_summary_p_affiliation %>% 
+  ggplot(aes(x = metric,
+         y = response,
+         fill = int_race_gender)) +
+  facet_grid(p_affiliation ~ toTitleCase(interruption_style)) +
+  geom_bar(stat = "identity",
+           position = position_dodge(0.9)) +
+  geom_errorbar(aes(ymin = lower_bound,
+                    ymax = upper_bound),
+                width = 0.75,
+                position = position_dodge(0.9)) +
+  theme_bw() +
+  scale_fill_brewer(palette = "RdGy") + 
+  labs(x = "Metric",
+       y = "Rating (0-100)",
+       title = "Judged Interruptiveness and Prosociality",
+       fill = "Interruptor race/gender") +
+  scale_x_discrete(labels = c("Interruptiveness", "Prosocial Engagement")) + 
+  theme(title = element_text(size=18),
+        legend.text = element_text(size=15),
+        axis.text = element_text(angle = 0, size = 12),
+        strip.text = element_text(size=12))
+summary_plot_p_affiliation
+
+##"penalization" plot
+penalized_plot_p_affiliation <- (filter(df_pen_p_affiliation,
+                                   p_affiliation != "Not reported")) %>% 
+  mutate(Trait = recode_factor(Trait,
+                               IM = "Interruptiveness",
+                               PEM = "Prosocial Engagement")) %>% 
+  ggplot(aes(x = int_race_gender,
+         y = Response,
+         fill = p_affiliation)) +
+  facet_wrap(~ Trait) +
+  geom_bar(stat = "identity",
+           position = position_dodge(0.9)) +
+  geom_errorbar(aes(ymin = lower_bound,
+                    ymax = upper_bound),
+                width = 0.75,
+                position = position_dodge(0.9)) +
+  theme_bw() +
+  # theme(legend.position = "none") +
+  scale_fill_brewer(palette = "Reds",
+                    name = "Participant \npolitical affiliation") + 
+  labs(x = "Race/Gender of Interruptor",
+       y = "Change in Rating",
+       title = "Changes in ratings between interruptive and agreeable conditions") +
+  theme(title = element_text(size=18),
+        legend.text = element_text(size=15),
+        axis.text = element_text(angle = 0, size = 12),
+        strip.text = element_text(size=12))
+penalized_plot_p_affiliation
+  
+```
+
+```{r worth looking at explicit beliefs?}
+df <- df %>% 
+  mutate(across(
+    .cols = c(gender_competitive_score,
+              gender_polite_score,
+              gender_listener_score,
+              gender_interrupter_score,
+              gender_interrupted_score,
+              race_competitive_score,
+              race_polite_score,
+              race_listener_score,
+              race_interrupter_score,
+              race_interrupted_score),
+    .fns = as.numeric)) %>% 
+  mutate(
+    across(
+      .cols = c(gender_competitive, gender_competitive_score,
+                gender_polite, gender_polite_score,
+                gender_listener, gender_listener_score,
+                gender_interrupter, gender_interrupter_score,
+                gender_interrupted, gender_interrupted_score,
+                race_competitive, race_competitive_score,
+                race_polite, race_polite_score,
+                race_listener, race_listener_score,
+                race_interrupter, race_interrupter_score,
+                race_interrupted, race_interrupted_score),
+      .fns = as.factor
+    ))
+
+density_plot <- df %>% 
+  select(c(
+    gender_competitive_score,
+    gender_polite_score,
+    gender_listener_score,
+    gender_interrupter_score,
+    gender_interrupted_score
+    # race_competitive_score,
+    # race_polite_score,
+    # race_listener_score,
+    # race_interrupter_score,
+    # race_interrupted_score
+  )) %>% 
+  mutate(across(.fns = as.numeric)) %>% 
+  pivot_longer(cols = c(
+    gender_competitive_score,
+    gender_polite_score,
+    gender_listener_score,
+    gender_interrupter_score,
+    gender_interrupted_score
+    # race_competitive_score,
+    # race_polite_score,
+    # race_listener_score,
+    # race_interrupter_score,
+    # race_interrupted_score
+  ),
+    names_to = "Description",
+    values_to = "score") %>% 
+  ggplot(aes(score, color = Description)) + 
+  geom_density() + 
+  theme_bw() + 
+  labs(x = "",
+       y = "Density",
+       title = 'In participants\' ideal worlds, these descriptions would apply…') +
+  scale_x_continuous(labels = c("Mostly to \n Men",
+                              "",
+                              "Equally to \n Men/Women",
+                              "",
+                              "Mostly to \n Women")) + 
+  scale_color_discrete(labels = c("Competitve",
+                                  "Get interrupted",
+                                  "Interrupt others",
+                                  "Good listener",
+                                  "Polite")) +
+  theme(title = element_text(size=18),
+        legend.text = element_text(size=15),
+        axis.text = element_text(angle = 10, size = 12),
+        strip.text = element_text(size=12),
+        plot.margin = margin(5, 30, 5, 5))
+
+density_plot
+  
+```
+
+was going to look at participant beliefs, but there's not enough data from racist/sexist people…
+```{r Participant explicit beliefs}
+#Set up
+
+#Racialized beliefs
+
+#Gendered beliefs
 
 ```
 
 
+```{r demographic models?}
+p_aff_model <- brm()
+```
+
+```{r}
+amp <- c(1, 3, 5, 5.5, 7, 8, 10)
+project_score <- c(-12.5, -4, -.5, 0, 3, 8, 10)
+hyp.df <- data.frame(amp, score)
+
+hyp_plot <- hyp.df %>% 
+  ggplot(aes(x = amp, y = score)) + 
+  geom_point() + 
+  theme_bw() +
+  stat_smooth(method = "lm") +
+  scale_color_brewer(palette = "BlGy") + 
+  labs(x = "Measure of implicit bias on AMP",
+       y = "Difference in product memory/purchase intention \n when seeing same-race face",
+       title = "Effects of other-race mirror those of \n non-celebrities in memory and purchase intention") +
+  scale_x_continuous(labels = c("Biased towards other-race faces",
+                                "",
+                                "",
+                                "No bias",
+                                "",
+                                "",
+                                "Biased towards same-race faces")) +
+  theme(axis.text = element_text(angle = 0, size = 12),
+        axis.text.y = element_blank(),
+        axis.ticks.y = element_blank(),
+        strip.text = element_text(size=12))
+```
 

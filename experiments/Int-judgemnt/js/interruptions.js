@@ -93,15 +93,15 @@ function make_slides(f) {
 			$('.dq').hide();
 			exp.speaker = _.sample(m_names);
 			exp.listener = _.sample(["Mary",
-															"Patricia",
-															"Jennifer",
-															"Linda",
-															"Elizabeth",
-															"Barbara",
-															"Susan",
-															"Jessica",
-															"Sarah",
-															"Margaret"])
+				"Patricia",
+				"Jennifer",
+				"Linda",
+				"Elizabeth",
+				"Barbara",
+				"Susan",
+				"Jessica",
+				"Sarah",
+				"Margaret"])
 			exp.lives = 0;
 			var story = exp.speaker + ' says to ' + exp.listener + ': "It\'s a beautiful day, isn\'t it?"';
 			var question = 'Who does ' + exp.speaker + ' talk to?';
@@ -181,7 +181,7 @@ function make_slides(f) {
 			var B_response;
 			
 			//setting stim-dependent fields
-			var practice_intro = "This conversation takes place beteen " + 
+			var practice_intro = "This conversation takes place between " + 
 				exp.practice_A + " (pictured on the left, speaking first) and " +
 				exp.practice_B + " (pictured on the right, speaking second).";
 
@@ -209,7 +209,8 @@ function make_slides(f) {
 		button : function() {
 			if ($('.practice-1').is(":visible")) {
 				var attn_check_responses = ["saturday", "i think", "i", "think",
-																		"there could be", "could be", "be"];
+											"there could be", "could be", "be",
+											"come", "count"];
 				if (attn_check_responses.includes((document.getElementById("p-agree-heard").value).toLowerCase()) == false) {
 					$('.err_1').show();
 				} else if (document.getElementById("practice-A-response").value == "50" || 
@@ -269,13 +270,13 @@ function make_slides(f) {
 						speakerB + 
 						" (pictured on the right).";
 			var interrupter_face = '<img src = "' + 
-														 exp.interrupter_face +
-														 '" alt="' + speakerA + '" style="width:150px;height:150px;">';
+									exp.interrupter_face +
+									'" alt="' + speakerA + '" style="width:150px;height:150px;">';
 			var interruptee_face = '<img src = "' + 
-														 exp.interruptee_face +
-														 '" alt="' + speakerB + '" style="width:150px;height:150px;">';
+									exp.interruptee_face +
+									'" alt="' + speakerB + '" style="width:150px;height:150px;">';
 			var audio_clip = '<audio controls src = "' + clip +
-											 '"type = "audio/wav"></audio>';
+							'"type = "audio/wav"></audio>';
 
 
 			//page 1: changing text
@@ -286,7 +287,11 @@ function make_slides(f) {
 		},
 
 		button : function () {
-			if (document.getElementById("agree-heard").checked) {
+			//setting up correct answers for comprehension question
+			var attn_check = ["broken", "late"];
+			
+			if (document.getElementById("agree-heard").checked &&
+				attn_check.includes($('input[name="attn-check-message"]:checked').val())) {
 				this.log_responses();
 				window.scrollTo(0,0);
 				exp.go();
